@@ -1,8 +1,29 @@
 # Completed Summary - PQC Besu Project
 
-## 1. Project Structure
+## 1. Current Project Status
 
-Project workspace has been created with two main parts:
+The core implementation of **Plan A - PQC Gateway PoC** has been completed.
+
+The project currently demonstrates a post-quantum transaction verification flow on top of a real Hyperledger Besu private QBFT network.
+
+Current status:
+
+```text
+[OK] Plan A core implementation completed.
+[OK] PQC Gateway verifies real ML-DSA-65 signatures.
+[OK] Backend directly builds ABI calldata and raw PQC transactions.
+[OK] Frontend dashboard can trigger and display demo transactions.
+[OK] Besu QBFT network includes relayed transactions in blocks.
+[OK] Smart contract execution, receipt, event, and state update are verified.
+[NOT YET] Plan B native Besu transaction validation.
+[NOT YET] PQC-QBFT consensus integration.
+```
+
+---
+
+## 2. Project Structure
+
+The project workspace is organized into two main directories:
 
 ```text
 ~/pqc-besu-project/
@@ -10,15 +31,37 @@ Project workspace has been created with two main parts:
 └── besu-fork/
 ```
 
-`app/` contains the application-level project code: smart contracts, backend, frontend, PQC core logic, PQC gateway, network configuration, scripts, documentation, and demo results.
+### app/
 
-`besu-fork/` contains the Hyperledger Besu source code for future native PQC upgrade.
+The `app/` directory contains the application-level implementation:
+
+```text
+contracts/
+backend/
+frontend/
+pqc-core/
+pqc-gateway/
+network/
+scripts/
+docs/
+results/
+besu-native/
+qbft-pqc-prototype/
+```
+
+This directory is used for Plan A implementation, demo scripts, evidence, frontend, backend, gateway, smart contracts, and documentation.
+
+### besu-fork/
+
+The `besu-fork/` directory contains the Hyperledger Besu source code.
 
 Current Besu branch:
 
 ```text
 pqc-native-upgrade
 ```
+
+This branch is prepared for Plan B native Besu upgrade work.
 
 Completed:
 
@@ -31,7 +74,7 @@ Completed:
 
 ---
 
-## 2. Besu Source Build
+## 3. Besu Source Build
 
 Hyperledger Besu has been built successfully from source using Java 25.
 
@@ -44,33 +87,36 @@ besu/v26.5-develop-b77d00f/linux-x86_64/openjdk-java-25
 Completed:
 
 ```text
-[OK] Besu source code prepared.
 [OK] Java 25 configured.
-[OK] Besu builds successfully.
+[OK] Besu source builds successfully.
 [OK] Besu binary runs successfully.
+[OK] Local Besu version verified.
 ```
 
 ---
 
-## 3. Development Environment
+## 4. Development Environment
 
 The local development environment has been configured.
 
 Completed:
 
 ```text
+[OK] Java 25 configured for Besu.
 [OK] Node.js 22 configured.
 [OK] Hardhat configured.
 [OK] TypeScript configured.
 [OK] Ethers.js installed.
-[OK] Smart contract compilation works.
+[OK] React frontend environment configured.
+[OK] Tailwind CSS configured.
 [OK] PQC Gateway server runs locally.
-[OK] pqc-core TypeScript scripts run successfully.
+[OK] Backend API server runs locally.
+[OK] Frontend dashboard runs locally.
 ```
 
 ---
 
-## 4. Besu RPC Verification
+## 5. Besu RPC Verification
 
 A local Besu JSON-RPC endpoint has been started and verified.
 
@@ -80,23 +126,29 @@ RPC endpoint:
 http://127.0.0.1:8545
 ```
 
-Verified result:
+Verified method:
 
 ```text
-web3_clientVersion returned the local Besu client version successfully.
+web3_clientVersion
+```
+
+Successful result:
+
+```text
+besu/v26.5-develop-b77d00f/linux-x86_64/openjdk-java-25
 ```
 
 Completed:
 
 ```text
 [OK] Besu node starts locally.
-[OK] JSON-RPC endpoint works.
-[OK] RPC connection from external tools works.
+[OK] JSON-RPC endpoint is reachable.
+[OK] External tools can connect to Besu RPC.
 ```
 
 ---
 
-## 5. QBFT Private Network
+## 6. QBFT Private Network
 
 A local private Besu network using QBFT consensus has been generated and started.
 
@@ -125,11 +177,12 @@ Completed:
 [OK] Validator nodes started.
 [OK] QBFT block production works.
 [OK] Transaction inclusion in QBFT block verified.
+[OK] net_peerCount reached 0x3 during demo.
 ```
 
 ---
 
-## 6. Smart Contract Deployment
+## 7. Smart Contract Deployment
 
 `BusinessContract` has been deployed successfully to the Besu QBFT network.
 
@@ -153,12 +206,12 @@ Completed:
 [OK] BusinessContract compiled.
 [OK] BusinessContract deployed.
 [OK] Contract bytecode exists on-chain.
-[OK] Trusted gateway relayer configured.
+[OK] Trusted gateway relayer configured in constructor.
 ```
 
 ---
 
-## 7. Baseline Contract Execution Test
+## 8. Baseline Contract Execution
 
 The deployed contract was tested through the trusted relayer model.
 
@@ -198,7 +251,7 @@ Completed:
 
 ---
 
-## 8. PQC Transaction Pipeline
+## 9. PQC Transaction Core
 
 The `pqc-core` module has been implemented.
 
@@ -222,20 +275,26 @@ canonical transaction fields
 → pqSignature
 → pqPublicKey
 → sender derivation
-→ raw PQC transaction object
+→ rawPQCTransaction
 ```
 
-The sender derivation rule is:
+Sender derivation rule:
 
 ```text
 sender = last20Bytes(keccak256(pqPublicKey))
 ```
 
+Transaction digest rule:
+
+```text
+txDigest = keccak256("PQC_BESU_TX_V1" || canonicalTxBytes)
+```
+
 ---
 
-## 9. Demo Signature Backend
+## 10. Demo Signature Backend Clarification
 
-A temporary Ed25519 demo backend was used earlier to validate the signing and verification pipeline.
+A temporary Ed25519 backend was used earlier only to validate the transaction pipeline.
 
 Important clarification:
 
@@ -243,28 +302,26 @@ Important clarification:
 Ed25519 is not a post-quantum signature algorithm.
 ```
 
-The Ed25519 backend was used only for development testing before integrating real ML-DSA.
+Current status:
+
+```text
+The temporary Ed25519 demo backend is not the final PQC implementation.
+The real PQC signature backend is ML-DSA-65.
+```
 
 Completed:
 
 ```text
-[OK] Demo signing pipeline tested.
-[OK] Demo verification pipeline tested.
-[OK] Interface prepared for ML-DSA replacement.
-```
-
-Current status:
-
-```text
-The demo Ed25519 backend is not the final PQC implementation.
-The real PQC signature backend is ML-DSA-65.
+[OK] Demo signing interface tested.
+[OK] Demo verification interface tested.
+[OK] Interface replaced by real ML-DSA-65 for final Plan A demo.
 ```
 
 ---
 
-## 10. Real ML-DSA-65 Integration
+## 11. Real ML-DSA-65 Integration
 
-Real ML-DSA-65 signing and verification have been added to `pqc-core`.
+Real ML-DSA-65 signing and verification have been added.
 
 Completed:
 
@@ -288,7 +345,7 @@ pqSignatureBytes: 3309
 
 ---
 
-## 11. PQC Gateway
+## 12. PQC Gateway
 
 The PQC Gateway has been implemented and configured.
 
@@ -298,15 +355,10 @@ Gateway endpoint:
 http://127.0.0.1:3001
 ```
 
-Health check endpoint:
+Gateway endpoints:
 
 ```text
-GET /health
-```
-
-Transaction submission endpoint:
-
-```text
+GET  /health
 POST /submit-pqc-tx
 ```
 
@@ -326,7 +378,7 @@ Completed:
 
 ---
 
-## 12. Valid ML-DSA Gateway Transaction
+## 13. Valid ML-DSA Gateway Transaction
 
 A valid raw PQC transaction signed with real ML-DSA-65 was submitted through the PQC Gateway.
 
@@ -377,7 +429,7 @@ Completed:
 
 ---
 
-## 13. Gateway Invalid Signature Test
+## 14. Invalid Signature Test
 
 The PQC Gateway was tested with an invalid signature.
 
@@ -407,7 +459,7 @@ Completed:
 
 ---
 
-## 14. Gateway Tampered Calldata Test
+## 15. Tampered Calldata Test
 
 The PQC Gateway was tested with calldata modified after signing.
 
@@ -445,9 +497,9 @@ Completed:
 
 ---
 
-## 15. Gateway Nonce Replay Test
+## 16. pqNonce Replay Protection Test
 
-The PQC Gateway was tested for pqNonce replay protection using a fixed demo keypair.
+The PQC Gateway was tested for pqNonce replay protection.
 
 Test sequence:
 
@@ -476,7 +528,268 @@ Completed:
 
 ---
 
-## 16. Current Completed Capabilities
+## 17. Backend Demo API
+
+The backend demo API has been implemented.
+
+Backend endpoint:
+
+```text
+http://127.0.0.1:4000
+```
+
+Backend endpoints:
+
+```text
+GET  /health
+POST /demo/check-besu
+POST /demo/send-valid-mldsa
+POST /demo/send-invalid-signature
+POST /demo/send-tampered-calldata
+```
+
+Completed:
+
+```text
+[OK] Backend API server runs locally.
+[OK] Backend health endpoint works.
+[OK] Backend can check Besu RPC.
+[OK] Backend can trigger valid ML-DSA demo.
+[OK] Backend can trigger invalid signature test.
+[OK] Backend can trigger tampered calldata test.
+[OK] Backend connects frontend to gateway demo flows.
+```
+
+---
+
+## 18. Backend Direct Transaction Builder
+
+The backend has been upgraded from a shell-script wrapper to a direct transaction builder.
+
+Direct endpoint:
+
+```text
+POST /direct/send-valid-mldsa
+```
+
+Direct backend flow:
+
+```text
+Frontend / curl
+→ Backend
+→ ABI calldata builder
+→ canonical raw PQC transaction builder
+→ ML-DSA-65 signer
+→ local ML-DSA-65 verifier
+→ PQC Gateway
+→ Besu QBFT
+→ BusinessContract
+```
+
+Completed:
+
+```text
+[OK] Backend builds ABI calldata directly.
+[OK] Backend builds canonical raw PQC transaction fields directly.
+[OK] Backend computes txDigest directly.
+[OK] Backend signs txDigest using ML-DSA-65.
+[OK] Backend verifies ML-DSA-65 signature locally.
+[OK] Backend submits rawPqcTransaction to PQC Gateway.
+[OK] Gateway verifies and relays the backend-built transaction.
+[OK] Besu includes the transaction in a QBFT block.
+[OK] BusinessContract state update succeeds.
+```
+
+Direct backend evidence:
+
+```text
+sender: 0xd7d8bd204ff1d45772979c7eaea3cd62e7d7411d
+txDigest: 0x6bb2d3cedb7a16cd5fc8a71fb46133c21b285fcfc8b8251ebbfac214424f522f
+signatureValid: true
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+gateway accepted: true
+txHash: 0x289ac1da45f527baa92b1b48bbe00cb1e031b188d72d5f1a3d796d3442d5a483
+receiptStatus: 1
+blockNumber: 993
+counterAfter: 7
+```
+
+---
+
+## 19. Backend-Managed PQC Wallet Nonce
+
+The backend direct mode has been improved to behave more like a dApp wallet.
+
+Completed:
+
+```text
+[OK] Backend keeps a stable ML-DSA-65 keypair while running.
+[OK] Backend derives one stable PQC sender from the ML-DSA public key.
+[OK] Backend manages auto pqNonce for repeated frontend transactions.
+[OK] Repeated frontend Buy actions can create new valid transactions.
+```
+
+This fixes the previous issue where each request generated a new keypair and manual nonce handling made repeated frontend transactions unreliable.
+
+---
+
+## 20. Receipt and Event Evidence
+
+Receipt and event evidence for the valid ML-DSA gateway transaction has been collected.
+
+Evidence file:
+
+```text
+results/receipts/plan-a-valid-mldsa-receipt.json
+```
+
+Collected evidence includes:
+
+```text
+[OK] Transaction hash.
+[OK] Receipt status.
+[OK] Block number.
+[OK] Block hash.
+[OK] Gas used.
+[OK] PQC sender.
+[OK] Contract counter state.
+[OK] Parsed PQCActionExecuted event.
+```
+
+Observed parsed event:
+
+```text
+PQCActionExecuted(
+  pqcSender = 0x1581bbb939C82F2d94F60675Da2baF88BA0c104f,
+  relayer   = 0x2f1AD402D1F8421BBF044417F509bb3119d7a79d,
+  value     = 7,
+  counter   = 7
+)
+```
+
+Completed:
+
+```text
+[OK] Successful receipt saved.
+[OK] Event log parsed.
+[OK] State update evidence saved.
+```
+
+---
+
+## 21. Frontend Dashboard
+
+A React + Tailwind frontend dashboard has been implemented.
+
+Frontend endpoint:
+
+```text
+http://127.0.0.1:5173
+```
+
+Completed:
+
+```text
+[OK] Light dashboard UI implemented.
+[OK] Backend health status displayed.
+[OK] Besu RPC status displayed.
+[OK] Latest blocks displayed.
+[OK] Buy / Send ML-DSA transaction button implemented.
+[OK] Invalid signature test button implemented.
+[OK] Tampered calldata test button implemented.
+[OK] Latest transaction panel implemented.
+[OK] PQC transaction dump implemented.
+[OK] Run history panel implemented.
+```
+
+Frontend flow:
+
+```text
+Frontend
+→ Backend API
+→ PQC Gateway
+→ Besu QBFT network
+→ BusinessContract
+```
+
+---
+
+## 22. PQC Transaction Dump
+
+The frontend displays a custom PQC transaction dump.
+
+This dump is not a Bitcoin transaction format. It is specific to this project.
+
+Dump contents:
+
+```text
+network
+contractCall
+pqcRawTransaction
+canonicalSigning
+gatewayVerification
+besuRelay
+blockEvidence
+```
+
+Important fields shown:
+
+```text
+pqPublicKey
+pqSignature
+sender
+txDigest
+ABI calldata
+ML-DSA-65 algorithm
+signature verification result
+gateway accepted status
+Besu txHash
+receipt status
+block number
+contract counter state
+```
+
+Completed:
+
+```text
+[OK] PQC public key is displayed.
+[OK] PQC signature is displayed.
+[OK] txDigest is displayed.
+[OK] ABI calldata is displayed.
+[OK] Gateway verification result is displayed.
+[OK] Besu relay result is displayed.
+```
+
+---
+
+## 23. Demo Runner Scripts
+
+Reusable demo scripts have been added.
+
+Scripts:
+
+```text
+scripts/check-besu-rpc.sh
+scripts/run-gateway.sh
+scripts/send-valid-mldsa-tx.sh
+scripts/send-invalid-signature.sh
+scripts/send-tampered-calldata.sh
+```
+
+Completed:
+
+```text
+[OK] Script to check Besu RPC.
+[OK] Script to run PQC Gateway.
+[OK] Script to send valid ML-DSA transaction.
+[OK] Script to send invalid signature test.
+[OK] Script to send tampered calldata test.
+```
+
+---
+
+## 24. Current Completed Capabilities
 
 Current completed capabilities:
 
@@ -496,6 +809,8 @@ Current completed capabilities:
 [OK] ML-DSA-65 signing works.
 [OK] ML-DSA-65 verification works.
 [OK] Raw PQC transaction generation works.
+[OK] Backend directly builds ABI calldata.
+[OK] Backend directly signs raw PQC transaction with ML-DSA-65.
 [OK] PQC Gateway verifies ML-DSA-65 signatures.
 [OK] PQC Gateway rejects invalid signatures.
 [OK] PQC Gateway rejects tampered calldata.
@@ -504,11 +819,14 @@ Current completed capabilities:
 [OK] PQC Gateway relays valid transactions to Besu.
 [OK] Besu includes relayed transactions in QBFT blocks.
 [OK] BusinessContract state update is verified.
+[OK] Receipt and event evidence collected.
+[OK] Frontend dashboard implemented.
+[OK] PQC transaction dump implemented.
 ```
 
 ---
 
-## 17. Current Plan A Status
+## 25. Current Plan A Status
 
 The main Plan A Gateway PoC flow is completed.
 
@@ -517,7 +835,8 @@ The current system demonstrates:
 ```text
 A real Besu private QBFT network.
 A deployed BusinessContract.
-A raw PQC transaction object.
+Backend-built ABI calldata.
+Backend-built raw PQC transaction.
 Canonical transaction encoding.
 ML-DSA-65 signing.
 ML-DSA-65 verification at the PQC Gateway.
@@ -529,18 +848,42 @@ Gateway relay of valid PQC transactions to Besu.
 QBFT block inclusion.
 Successful EVM execution.
 Successful receipt and state update.
+Frontend dApp-style dashboard.
+PQC transaction dump with public key and signature.
+```
+
+Plan A claim:
+
+```text
+Plan A demonstrates pre-chain ML-DSA-65 transaction verification through a PQC Gateway in front of a real Besu QBFT private network.
 ```
 
 ---
 
-## 18. Not Completed Yet
+## 26. Important Non-Claims
+
+The project must not claim the following for Plan A:
+
+```text
+[NO] Besu native transaction validation uses ML-DSA.
+[NO] Besu txpool accepts native PQC transactions.
+[NO] QBFT consensus messages are signed with ML-DSA.
+[NO] The system is Ethereum mainnet compatible.
+[NO] The gateway alone makes Besu fully quantum-safe at the protocol level.
+```
+
+These are Plan B or future-work targets.
+
+---
+
+## 27. Not Completed Yet
 
 The following parts are not completed yet:
 
 ```text
-[ ] Full event log extraction and saved receipt JSON.
-[ ] Frontend demo UI.
-[ ] Backend API wrapper.
+[ ] README/runbook for full demo startup.
+[ ] Final report writing.
+[ ] More automated integration tests.
 [ ] Plan B1 Besu custom RPC method.
 [ ] Plan B2 native PQC transaction path.
 [ ] Plan B3 PQC-QBFT consensus integration.
@@ -548,9 +891,9 @@ The following parts are not completed yet:
 
 ---
 
-## 19. Summary
+## 28. Summary
 
-The project has completed the core blockchain execution and PQC Gateway flow for Plan A.
+The project has completed the core blockchain execution, PQC Gateway verification, backend direct transaction building, and frontend dashboard for Plan A.
 
 At this stage, the system can demonstrate:
 
@@ -558,6 +901,7 @@ At this stage, the system can demonstrate:
 A real Besu private QBFT network.
 A deployed smart contract.
 A trusted gateway relayer model.
+A backend-built raw PQC transaction.
 A raw PQC transaction signed with real ML-DSA-65.
 Gateway-side ML-DSA-65 verification.
 Gateway-side pqNonce replay protection.
@@ -566,43 +910,6 @@ Valid transaction relay into Besu.
 QBFT block inclusion.
 Successful EVM execution.
 Successful receipt and state update.
+Frontend dashboard interaction.
+PQC transaction dump containing pqPublicKey and pqSignature.
 ```
-
----
-
-## 21. Backend Direct Transaction Builder
-
-The backend has been upgraded from a script wrapper to a direct transaction builder for the valid ML-DSA flow.
-
-Completed:
-
-```text
-[OK] Backend builds ABI calldata directly.
-[OK] Backend builds canonical raw PQC transaction fields directly.
-[OK] Backend computes txDigest directly.
-[OK] Backend signs txDigest using ML-DSA-65.
-[OK] Backend verifies ML-DSA-65 signature locally.
-[OK] Backend submits rawPqcTransaction to PQC Gateway.
-[OK] Gateway verifies and relays the backend-built transaction.
-[OK] Besu includes the transaction in a QBFT block.
-[OK] BusinessContract state update succeeds.
-```
-
-Evidence:
-
-```text
-sender: 0xd7d8bd204ff1d45772979c7eaea3cd62e7d7411d
-txDigest: 0x6bb2d3cedb7a16cd5fc8a71fb46133c21b285fcfc8b8251ebbfac214424f522f
-signatureValid: true
-pqPublicKeyBytes: 1952
-pqSignatureBytes: 3309
-gateway accepted: true
-txHash: 0x289ac1da45f527baa92b1b48bbe00cb1e031b188d72d5f1a3d796d3442d5a483
-receiptStatus: 1
-blockNumber: 993
-counterAfter: 7
-```
-
-This confirms that the backend now directly performs the Plan A transaction-building role instead of only invoking shell scripts.
-
----
