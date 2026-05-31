@@ -1,7 +1,8 @@
+import crypto from "node:crypto";
 import { Interface } from "ethers";
 import { derivePqcSenderAddress } from "./address.js";
 import { encodeCanonicalTx } from "./canonical-encoder.js";
-import { generateDemoKeypair, signDigestDemo } from "./sign.js";
+import { signDigestDemo } from "./sign.js";
 import { computeTxDigest } from "./tx-digest.js";
 import { verifyDigestDemo } from "./verify.js";
 
@@ -20,8 +21,19 @@ const gasLimit = 800000n;
 const gasPrice = 0n;
 const pqAlgorithm = "DEMO-ED25519";
 
-const keypair = generateDemoKeypair();
-const sender = derivePqcSenderAddress(keypair.publicKey);
+const fixedPrivateKeyPem = `-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIF7VbpRbE9yT3RO+pq2KTN7j9+wUXt1K1W8c7KG+3U8k
+-----END PRIVATE KEY-----`;
+
+const privateKey = crypto.createPrivateKey(fixedPrivateKeyPem);
+const publicKey = crypto.createPublicKey(privateKey);
+const publicKeyDer = publicKey.export({
+  type: "spki",
+  format: "der"
+});
+
+const pqPublicKey = "0x" + Buffer.from(publicKeyDer).toString("hex");
+const sender = derivePqcSenderAddress(pqPublicKey);
 
 const iface = new Interface(businessContractAbi);
 const calldata = iface.encodeFunctionData("executeFromPQC", [
@@ -42,8 +54,8 @@ const canonicalTxBytes = encodeCanonicalTx({
 });
 
 const txDigest = computeTxDigest(canonicalTxBytes);
-const pqSignature = signDigestDemo(txDigest, keypair.privateKeyPem);
-const signatureValid = verifyDigestDemo(txDigest, pqSignature, keypair.publicKey);
+const pqSignature = signDigestDemo(txDigest, fixedPrivateKeyPem);
+const signatureValid = verifyDigestDemo(txDigest, pqSignature, pqPublicKey);
 
 const rawPqcTransaction = {
   type: "PQC_TRANSACTION",
@@ -55,13 +67,14 @@ const rawPqcTransaction = {
   gasPrice: gasPrice.toString(),
   data: calldata,
   pqAlgorithm,
-  pqPublicKey: keypair.publicKey,
+  pqPublicKey,
   pqSignature,
   sender
 };
 
 console.log("Local signatureValid:", signatureValid);
 console.log("Sender:", sender);
+console.log("pqNonce:", pqNonce.toString());
 console.log("txDigest:", txDigest);
 console.log("Submitting to gateway:", GATEWAY_URL);
 
