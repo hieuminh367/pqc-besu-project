@@ -20,3 +20,14 @@ Conclusion:
 The relayer successfully submitted a transaction to Besu.
 The EVM executed BusinessContract.
 The contract state was updated for the PQC sender identity.
+
+Besu QBFT node log evidence:
+
+2026-05-31 13:07:20.015+0700 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #74 / 0 tx / 1 pending / 0 (0.0%) gas / (0x84b4a704788250263aa2c5fa4db8d9cce93bd41a7babba0e6a0d99beeb08be76)
+
+2026-05-31 13:07:22.039+0700 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced block #75 / 1 tx / 0 pending / 49,279 (0.0%) gas / (0x96ac18d0351026aa453c2a30ba9194c4c10bd602ee88664b7faaa2578ca2f177)
+
+Interpretation:
+Block #75 included the contract execution transaction.
+The transaction used 49,279 gas.
+The pending transaction count returned to 0 after block production.
