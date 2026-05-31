@@ -1,0 +1,22 @@
+# secrets
+.env
+*.pem
+*.key
+
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+build/
+artifacts/
+cache/
+typechain-types/
+
+# logs
+*.log
+npm-debug.log*
+
+# OS/editor
+.DS_Store
+.vscode/
