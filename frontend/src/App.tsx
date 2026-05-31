@@ -173,66 +173,80 @@ export default function App() {
 
   const latestTxHash = lastTx?.result?.gateway?.relay?.txHash;
 
-  const rawExplorerDump = useMemo(() => {
+  const pqcTransactionDump = useMemo(() => {
     if (!lastTx) return null;
 
+    const rawTx = lastTx.result.rawPqcTransaction;
+    const local = lastTx.result.localVerification;
+    const gateway = lastTx.result.gateway;
+    const relay = gateway.relay;
+
     return {
-      indexed_txo: [lastTx.result.rawPqcTransaction.sender],
-      raw: lastTx.result.rawPqcTransaction.data,
-      spends: null,
-      tx: {
-        blockhash: txDump?.result?.receipt?.blockHash ?? null,
-        blocktime: null,
-        confirmations: txDump?.result?.tx?.confirmations ?? null,
-        hash: latestTxHash,
-        hex: lastTx.result.rawPqcTransaction.data,
-        locktime: 0,
-        size: String(lastTx.result.rawPqcTransaction.data ?? "").length / 2,
-        time: null,
-        txid: latestTxHash,
-        version: 1,
-        vin: [
-          {
-            scriptSig: {
-              asm: "ML-DSA-65 signature verified by PQC Gateway",
-              hex: ""
-            },
-            sequence: Number(lastTx.result.rawPqcTransaction.pqNonce),
-            txid: lastTx.result.localVerification.txDigest,
-            txinwitness: [
-              lastTx.result.rawPqcTransaction.pqSignature,
-              lastTx.result.rawPqcTransaction.pqPublicKey
-            ],
-            vout: 0
-          }
-        ],
-        vout: [
-          {
-            n: 0,
-            scriptPubKey: {
-              address: lastTx.result.rawPqcTransaction.to,
-              asm: "BusinessContract.executeFromPQC",
-              hex: lastTx.result.rawPqcTransaction.data,
-              type: "besu_contract_call"
-            },
-            value
-          }
-        ],
-        vsize: String(lastTx.result.rawPqcTransaction.data ?? "").length / 2,
-        weight: String(lastTx.result.rawPqcTransaction.data ?? "").length * 2
+      title: "PQC Besu Transaction Dump",
+      note:
+        "This is not a Bitcoin transaction. This dump shows a raw PQC transaction, ML-DSA-65 proof data, gateway verification result, and the relayed Besu transaction.",
+      network: {
+        chainId: health?.chainId ?? "1337",
+        consensus: "QBFT",
+        besuRpc: health?.besuRpcUrl,
+        gateway: health?.gatewayUrl,
+        backend: api.backendUrl
       },
-      pqc: {
-        algorithm: "ML-DSA-65",
-        sender: lastTx.result.rawPqcTransaction.sender,
-        txDigest: lastTx.result.localVerification.txDigest,
-        publicKeyBytes: lastTx.result.localVerification.pqPublicKeyBytes,
-        signatureBytes: lastTx.result.localVerification.pqSignatureBytes,
-        signatureValid: lastTx.result.localVerification.signatureValid,
-        gatewayAccepted: lastTx.result.gateway.accepted
+      contractCall: {
+        contractAddress: rawTx.to,
+        functionName: "executeFromPQC(address pqcSender, uint256 value)",
+        pqcSender: rawTx.sender,
+        value,
+        abiCalldata: rawTx.data
       },
-      txid: latestTxHash
+      pqcRawTransaction: {
+        type: rawTx.type,
+        chainId: rawTx.chainId,
+        pqNonce: rawTx.pqNonce,
+        to: rawTx.to,
+        value: rawTx.value,
+        gasLimit: rawTx.gasLimit,
+        gasPrice: rawTx.gasPrice,
+        data: rawTx.data,
+        pqAlgorithm: rawTx.pqAlgorithm,
+        sender: rawTx.sender,
+        pqPublicKey: rawTx.pqPublicKey,
+        pqSignature: rawTx.pqSignature
+      },
+      canonicalSigning: {
+        domainSeparator: "PQC_BESU_TX_V1",
+        txDigest: local.txDigest,
+        signatureAlgorithm: rawTx.pqAlgorithm,
+        signatureValidLocally: local.signatureValid,
+        pqPublicKeyBytes: local.pqPublicKeyBytes,
+        pqSignatureBytes: local.pqSignatureBytes,
+        senderDerivation: "last20Bytes(keccak256(pqPublicKey))"
+      },
+      gatewayVerification: {
+        accepted: gateway.accepted,
+        signatureValid: gateway.signatureValid,
+        pqNonceValid: gateway.pqNonceValid,
+        derivedSender: gateway.derivedSender,
+        txDigest: gateway.txDigest
+      },
+      besuRelay: {
+        relayedBy: "trusted gateway relayer",
+        besuTxHash: relay.txHash,
+        receiptStatus: relay.receiptStatus,
+        blockNumber: relay.blockNumber,
+        counterAfter: relay.counterAfter
+      },
+      blockEvidence: txDump?.result?.receipt
+        ? {
+            blockHash: txDump.result.receipt.blockHash,
+            gasUsed: txDump.result.receipt.gasUsed,
+            from: txDump.result.receipt.from,
+            to: txDump.result.receipt.to,
+            logs: txDump.result.receipt.logs
+          }
+        : null
     };
-  }, [lastTx, txDump, latestTxHash, value]);
+  }, [lastTx, txDump, value, health]);
 
   async function refresh() {
     const [h, o] = await Promise.all([api.health(), api.overview()]);
@@ -485,12 +499,12 @@ export default function App() {
             <section className="space-y-6">
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-xl font-black text-slate-950">
-                  Latest Transaction
+                  Latest PQC Transaction
                 </h2>
 
                 {!lastTx ? (
                   <div className="mt-5 rounded-3xl border border-dashed border-slate-200 p-10 text-center text-slate-400">
-                    No PQC transaction yet. Press Buy / Send ML-DSA Transaction.
+                    No PQC transaction yet. Press Buy / Send ML-DSA Transaction to generate a raw PQC transaction dump.
                   </div>
                 ) : (
                   <div className="mt-5 space-y-4">
@@ -519,7 +533,7 @@ export default function App() {
 
                     <div className="rounded-3xl bg-slate-50 p-5">
                       <div className="mb-2 text-sm font-bold text-slate-500">
-                        Transaction Hash
+                        Relayed Besu Transaction Hash
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="min-w-0 flex-1 break-all font-mono text-sm">
@@ -560,16 +574,16 @@ export default function App() {
                 )}
               </div>
 
-              {rawExplorerDump && (
+              {pqcTransactionDump && (
                 <JsonDump
-                  title="Explorer-style Transaction Dump"
-                  data={rawExplorerDump}
+                  title="PQC Transaction Dump"
+                  data={pqcTransactionDump}
                 />
               )}
 
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-xl font-black text-slate-950">
-                  Latest Transactions
+                  Latest PQC Transactions
                 </h2>
                 <div className="mt-4 space-y-3">
                   {logs.length === 0 ? (
