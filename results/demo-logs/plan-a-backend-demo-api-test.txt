@@ -1,0 +1,62 @@
+Plan A Backend Demo API Test
+
+Purpose:
+Verify that the backend can trigger Plan A demo flows through HTTP API endpoints.
+
+Backend endpoint:
+http://127.0.0.1:4000
+
+Tested endpoints:
+- GET /health
+- POST /demo/check-besu
+- POST /demo/send-invalid-signature
+- POST /demo/send-tampered-calldata
+- POST /demo/send-valid-mldsa
+
+Health result:
+[OK] Backend is running.
+[OK] Backend reads app/.env.
+[OK] Backend is connected to PQC Gateway at http://127.0.0.1:3001.
+[OK] Backend is configured for Besu RPC at http://127.0.0.1:8545.
+
+Besu check result:
+[OK] web3_clientVersion returned besu/v26.5-develop-b77d00f/linux-x86_64/openjdk-java-25.
+[OK] eth_blockNumber returned 0x29f.
+[OK] net_peerCount returned 0x3.
+
+Invalid signature result:
+[OK] Backend triggered invalid signature script.
+[OK] Gateway rejected the transaction.
+[OK] Gateway returned HTTP 400.
+[OK] Gateway rejection stage was signature-verification.
+[OK] Gateway reason was invalid signature.
+
+Tampered calldata result:
+[OK] Backend triggered tampered calldata script.
+[OK] Original ML-DSA-65 signature was valid before calldata tampering.
+[OK] Signature became invalid after calldata tampering.
+[OK] Gateway rejected the transaction.
+[OK] Gateway returned HTTP 400.
+[OK] Gateway reason was invalid signature.
+
+Valid ML-DSA transaction result:
+[OK] Backend triggered valid ML-DSA-65 transaction script.
+[OK] Local ML-DSA-65 signature verification returned true.
+[OK] Gateway accepted the raw PQC transaction.
+[OK] Gateway verified ML-DSA-65 signature.
+[OK] Gateway validated pqNonce.
+[OK] Gateway relayed the transaction to Besu.
+[OK] Besu included the transaction in a QBFT block.
+[OK] Receipt status was 1.
+[OK] Contract counter after execution was 7.
+
+Valid transaction evidence:
+sender: 0x286dadd0864a934eca5574092a8097088b8e8a83
+txDigest: 0x9f7431aad5c89cddca2a544c51460874275e207981e81c618d157dc4aaa70f3a
+txHash: 0x7f2ed510b9bbfd353b978a5f00223bb8f1992007651245665331087b46347134
+receiptStatus: 1
+blockNumber: 724
+counterAfter: 7
+
+Conclusion:
+The backend demo API successfully triggers the Plan A PQC Gateway PoC flows and provides an HTTP API layer for frontend/demo integration.
