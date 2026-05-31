@@ -15,7 +15,7 @@ const to = "0x6fDfeb70f1b4D35A7E11A2687B7bAf367cDeB7aA";
 const value = 0n;
 const gasLimit = 800000n;
 const gasPrice = 0n;
-const pqAlgorithm = "ML-DSA-DEMO";
+const pqAlgorithm = "DEMO-ED25519";
 
 const keypair = generateDemoKeypair();
 const sender = derivePqcSenderAddress(keypair.publicKey);
