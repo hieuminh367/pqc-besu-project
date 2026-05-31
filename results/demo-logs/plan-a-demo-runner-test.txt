@@ -1,0 +1,39 @@
+Plan A Demo Runner Test
+
+Purpose:
+Verify that the reusable demo scripts can run the main Plan A checks.
+
+Executed scripts:
+- scripts/check-besu-rpc.sh
+- scripts/send-valid-mldsa-tx.sh
+- scripts/send-invalid-signature.sh
+- scripts/send-tampered-calldata.sh
+
+Besu RPC result:
+web3_clientVersion returned besu/v26.5-develop-b77d00f/linux-x86_64/openjdk-java-25
+eth_blockNumber returned 0x250
+net_peerCount returned 0x3
+
+Valid ML-DSA-65 transaction:
+accepted: true
+signatureValid: true
+pqNonceValid: true
+derivedSender: 0x73344a8b1ee329c02ef38c5a0dc6dbe98c02bfab
+txDigest: 0xbcb8f0506797cd50526b219a0adfb300b6c2c0f1e5b0eda9a39d3205f69f2fef
+txHash: 0x056589e4c6b4b7086ef7e703d97ee8a52b6b183d2002a6272557b02ce6cb68fc
+receiptStatus: 1
+blockNumber: 593
+counterAfter: 7
+
+Invalid signature test:
+Gateway HTTP status: 400
+stage: signature-verification
+reason: invalid signature
+
+Tampered calldata test:
+Gateway HTTP status: 400
+stage: signature-verification
+reason: invalid signature
+
+Conclusion:
+The Plan A demo runner scripts successfully verified Besu RPC connectivity, valid ML-DSA-65 transaction relay, invalid signature rejection, and tampered calldata rejection.
