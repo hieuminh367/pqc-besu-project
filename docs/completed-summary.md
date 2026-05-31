@@ -567,3 +567,43 @@ QBFT block inclusion.
 Successful EVM execution.
 Successful receipt and state update.
 ```
+
+---
+
+## 20. Receipt and Event Evidence
+
+Receipt and event evidence for the valid ML-DSA gateway transaction has been collected and saved.
+
+Evidence file:
+
+```text
+results/receipts/plan-a-valid-mldsa-receipt.json
+```
+
+Collected evidence includes:
+
+```text
+[OK] Transaction hash.
+[OK] Receipt status.
+[OK] Block number.
+[OK] Block hash.
+[OK] Gas used.
+[OK] PQC sender.
+[OK] Contract counter state.
+[OK] Parsed PQCActionExecuted event.
+```
+
+Observed parsed event:
+
+```text
+PQCActionExecuted(
+  pqcSender = 0x1581bbb939C82F2d94F60675Da2baF88BA0c104f,
+  relayer   = 0x2f1AD402D1F8421BBF044417F509bb3119d7a79d,
+  value     = 7,
+  counter   = 7
+)
+```
+
+Conclusion:
+
+The valid ML-DSA gateway transaction produced a successful receipt, emitted the expected smart contract event, and updated contract state.
