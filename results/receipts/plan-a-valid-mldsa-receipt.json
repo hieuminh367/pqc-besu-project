@@ -1,0 +1,40 @@
+{
+  "network": {
+    "chainId": "1337",
+    "rpc": "http://127.0.0.1:8545",
+    "consensus": "QBFT"
+  },
+  "contract": {
+    "businessContract": "0x6fDfeb70f1b4D35A7E11A2687B7bAf367cDeB7aA",
+    "trustedGatewayRelayer": "0x2f1AD402D1F8421BBF044417F509bb3119d7a79d"
+  },
+  "transaction": {
+    "hash": "0xff24b269d6a51d9ab6d48eba33bde2a096b4fdd7fd3ecb2193891746cd49b6c8",
+    "from": "0x2f1AD402D1F8421BBF044417F509bb3119d7a79d",
+    "to": "0x6fDfeb70f1b4D35A7E11A2687B7bAf367cDeB7aA",
+    "nonce": 7,
+    "blockNumber": 421,
+    "status": 1,
+    "gasUsed": "49279"
+  },
+  "block": {
+    "number": 421,
+    "hash": "0x9142463b963c6969ee5c6fd8c7f09e4803482fd56d088c54a61e1f4ea57fd17f",
+    "timestamp": 1780210918
+  },
+  "pqc": {
+    "sender": "0x1581bbb939c82f2d94f60675da2baf88ba0c104f",
+    "counterAfter": "7"
+  },
+  "logs": [
+    {
+      "name": "PQCActionExecuted",
+      "args": [
+        "0x1581bbb939C82F2d94F60675Da2baF88BA0c104f",
+        "0x2f1AD402D1F8421BBF044417F509bb3119d7a79d",
+        "7",
+        "7"
+      ]
+    }
+  ]
+}
