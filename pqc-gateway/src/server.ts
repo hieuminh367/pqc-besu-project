@@ -68,7 +68,7 @@ app.post("/submit-pqc-tx", async (req, res) => {
     }
 
     const pqNonce = BigInt(rawTx.pqNonce);
-    const nonceOk = nonceStore.checkAndUpdate(
+    const nonceOk = nonceStore.isValid(
       verification.derivedSender,
       pqNonce
     );
@@ -112,6 +112,8 @@ app.post("/submit-pqc-tx", async (req, res) => {
       pqcSender: verification.derivedSender,
       value: decodedValue
     });
+
+    nonceStore.commit(verification.derivedSender);
 
     return res.json({
       accepted: true,

@@ -1,0 +1,32 @@
+Plan A Gateway Valid Transaction Test
+
+Flow:
+raw PQC transaction
+-> gateway verification
+-> sender derivation
+-> pqNonce check
+-> relayer submits transaction to Besu
+-> BusinessContract execution
+-> state update
+
+Result:
+accepted: true
+signatureValid: true
+pqNonceValid: true
+
+derivedSender:
+0x9e774d0d61489d078ab357780c49b5c93f92984f
+
+txDigest:
+0xbf4f6f078006a357cebc0276d29dbcc2b0589dbf17d56aadd1c53d6376f1f5aa
+
+Besu relay result:
+txHash: 0x3acddde66b98e010a6753d791dec8de8321a4ce9b370f2f0e182888bd9a73f74
+receiptStatus: 1
+blockNumber: 181
+counterAfter: 7
+
+Conclusion:
+The PQC Gateway accepted a valid raw PQC transaction, verified the signature,
+validated pqNonce, relayed the transaction to Besu, and the smart contract state
+was updated successfully.

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "demo": "tsx src/demo-build-raw-pqc-tx.ts"
+    "demo": "tsx src/demo-build-raw-pqc-tx.ts",
+    "send:gateway": "tsx src/send-to-gateway.ts"
   },
   "dependencies": {
     "ethers": "^6.15.0"
