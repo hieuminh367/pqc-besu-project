@@ -18,11 +18,14 @@ function env(name: string, fallback?: string): string {
   return value;
 }
 
+const gatewayUrl = env("GATEWAY_URL", "http://127.0.0.1:3001").replace(/\/$/, "");
+
 export const config = {
   appRoot: APP_ROOT,
   envPath: ENV_PATH,
   backendPort: Number(env("BACKEND_PORT", "4000")),
-  gatewayUrl: env("GATEWAY_URL", "http://127.0.0.1:3001"),
+  gatewayUrl,
+  gatewaySubmitUrl: `${gatewayUrl}/submit-pqc-tx`,
   besuRpcUrl: env("BESU_RPC_URL"),
   chainId: env("CHAIN_ID"),
   businessContractAddress: env("BUSINESS_CONTRACT_ADDRESS")

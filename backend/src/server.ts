@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
 import { config } from "./config.js";
+import { sendValidMldsaDirect } from "./direct-pqc.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -52,6 +53,30 @@ app.get("/health", (_req, res) => {
     chainId: config.chainId,
     businessContractAddress: config.businessContractAddress
   });
+});
+
+
+app.post("/direct/send-valid-mldsa", async (req, res) => {
+  try {
+    const result = await sendValidMldsaDirect({
+      pqNonce: req.body?.pqNonce ?? "1",
+      value: req.body?.value ?? "7"
+    });
+
+    res.json({
+      ok: true,
+      mode: "backend-direct",
+      description:
+        "Backend built ABI calldata, canonical raw PQC transaction, signed with ML-DSA-65, and submitted to PQC Gateway.",
+      result
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      mode: "backend-direct",
+      error: err instanceof Error ? err.message : String(err)
+    });
+  }
 });
 
 app.post("/demo/check-besu", async (_req, res) => {
