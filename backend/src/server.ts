@@ -5,6 +5,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { config } from "./config.js";
 import { sendValidMldsaDirect } from "./direct-pqc.js";
+import { getExplorerOverview, getTxDump } from "./explorer.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -56,10 +57,42 @@ app.get("/health", (_req, res) => {
 });
 
 
+
+app.get("/explorer/overview", async (req, res) => {
+  try {
+    const limit = Number(req.query.limit ?? "8");
+    const result = await getExplorerOverview(limit);
+    res.json({
+      ok: true,
+      result
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: err instanceof Error ? err.message : String(err)
+    });
+  }
+});
+
+app.get("/explorer/tx/:hash", async (req, res) => {
+  try {
+    const result = await getTxDump(req.params.hash);
+    res.json({
+      ok: true,
+      result
+    });
+  } catch (err) {
+    res.status(404).json({
+      ok: false,
+      error: err instanceof Error ? err.message : String(err)
+    });
+  }
+});
+
 app.post("/direct/send-valid-mldsa", async (req, res) => {
   try {
     const result = await sendValidMldsaDirect({
-      pqNonce: req.body?.pqNonce ?? "1",
+      pqNonce: req.body?.pqNonce ?? "auto",
       value: req.body?.value ?? "7"
     });
 
