@@ -570,40 +570,39 @@ Successful receipt and state update.
 
 ---
 
-## 20. Receipt and Event Evidence
+## 21. Backend Direct Transaction Builder
 
-Receipt and event evidence for the valid ML-DSA gateway transaction has been collected and saved.
+The backend has been upgraded from a script wrapper to a direct transaction builder for the valid ML-DSA flow.
 
-Evidence file:
-
-```text
-results/receipts/plan-a-valid-mldsa-receipt.json
-```
-
-Collected evidence includes:
+Completed:
 
 ```text
-[OK] Transaction hash.
-[OK] Receipt status.
-[OK] Block number.
-[OK] Block hash.
-[OK] Gas used.
-[OK] PQC sender.
-[OK] Contract counter state.
-[OK] Parsed PQCActionExecuted event.
+[OK] Backend builds ABI calldata directly.
+[OK] Backend builds canonical raw PQC transaction fields directly.
+[OK] Backend computes txDigest directly.
+[OK] Backend signs txDigest using ML-DSA-65.
+[OK] Backend verifies ML-DSA-65 signature locally.
+[OK] Backend submits rawPqcTransaction to PQC Gateway.
+[OK] Gateway verifies and relays the backend-built transaction.
+[OK] Besu includes the transaction in a QBFT block.
+[OK] BusinessContract state update succeeds.
 ```
 
-Observed parsed event:
+Evidence:
 
 ```text
-PQCActionExecuted(
-  pqcSender = 0x1581bbb939C82F2d94F60675Da2baF88BA0c104f,
-  relayer   = 0x2f1AD402D1F8421BBF044417F509bb3119d7a79d,
-  value     = 7,
-  counter   = 7
-)
+sender: 0xd7d8bd204ff1d45772979c7eaea3cd62e7d7411d
+txDigest: 0x6bb2d3cedb7a16cd5fc8a71fb46133c21b285fcfc8b8251ebbfac214424f522f
+signatureValid: true
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+gateway accepted: true
+txHash: 0x289ac1da45f527baa92b1b48bbe00cb1e031b188d72d5f1a3d796d3442d5a483
+receiptStatus: 1
+blockNumber: 993
+counterAfter: 7
 ```
 
-Conclusion:
+This confirms that the backend now directly performs the Plan A transaction-building role instead of only invoking shell scripts.
 
-The valid ML-DSA gateway transaction produced a successful receipt, emitted the expected smart contract event, and updated contract state.
+---
