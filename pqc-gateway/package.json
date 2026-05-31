@@ -6,6 +6,7 @@
     "dev": "tsx src/server.ts"
   },
   "dependencies": {
+    "@noble/post-quantum": "^0.6.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "ethers": "^6.15.0",

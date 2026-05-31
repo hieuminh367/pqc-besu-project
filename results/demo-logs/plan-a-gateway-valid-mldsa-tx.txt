@@ -1,0 +1,44 @@
+Plan A Gateway Valid ML-DSA Transaction Test
+
+Purpose:
+Verify that the PQC Gateway accepts a valid raw PQC transaction signed with real ML-DSA-65.
+
+Algorithm:
+ML-DSA-65
+
+Transaction pipeline:
+raw PQC transaction
+-> canonical transaction encoding
+-> txDigest generation
+-> ML-DSA-65 signing
+-> gateway ML-DSA-65 verification
+-> PQC sender derivation
+-> pqNonce validation
+-> relayer submits transaction to Besu
+-> BusinessContract execution
+-> state update
+
+Observed result:
+Algorithm: ML-DSA-65
+Local signatureValid: true
+Sender: 0x1581bbb939c82f2d94f60675da2baf88ba0c104f
+pqNonce: 1
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+txDigest: 0x6376fa43302c8cc957468cdc5389d2760260fa855264eeb1fc126ba2ef0fc359
+
+Gateway response:
+accepted: true
+signatureValid: true
+pqNonceValid: true
+derivedSender: 0x1581bbb939c82f2d94f60675da2baf88ba0c104f
+txDigest: 0x6376fa43302c8cc957468cdc5389d2760260fa855264eeb1fc126ba2ef0fc359
+
+Besu relay result:
+txHash: 0xff24b269d6a51d9ab6d48eba33bde2a096b4fdd7fd3ecb2193891746cd49b6c8
+receiptStatus: 1
+blockNumber: 421
+counterAfter: 7
+
+Conclusion:
+The PQC Gateway successfully verified a real ML-DSA-65 signature, accepted the raw PQC transaction, relayed it to Besu, and the smart contract state was updated successfully.

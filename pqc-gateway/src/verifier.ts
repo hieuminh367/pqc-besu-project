@@ -6,6 +6,7 @@ import {
 import { computeTxDigest } from "../../pqc-core/src/tx-digest.js";
 import { derivePqcSenderAddress } from "../../pqc-core/src/address.js";
 import { verifyDigestDemo } from "../../pqc-core/src/verify.js";
+import { verifyDigestMldsa } from "../../pqc-core/src/mldsa.js";
 
 export type RawPqcTransaction = {
   type: string;
@@ -29,6 +30,31 @@ export type VerificationResult = {
   txDigest?: string;
 };
 
+function verifySignature(params: {
+  pqAlgorithm: string;
+  txDigest: string;
+  pqSignature: string;
+  pqPublicKey: string;
+}): boolean {
+  if (params.pqAlgorithm === "ML-DSA-65") {
+    return verifyDigestMldsa(
+      params.txDigest,
+      params.pqSignature,
+      params.pqPublicKey
+    );
+  }
+
+  if (params.pqAlgorithm === "DEMO-ED25519") {
+    return verifyDigestDemo(
+      params.txDigest,
+      params.pqSignature,
+      params.pqPublicKey
+    );
+  }
+
+  throw new Error(`unsupported pqAlgorithm: ${params.pqAlgorithm}`);
+}
+
 export function verifyRawPqcTransaction(
   rawTx: RawPqcTransaction
 ): VerificationResult {
@@ -36,7 +62,10 @@ export function verifyRawPqcTransaction(
     return { accepted: false, reason: "invalid transaction type" };
   }
 
-  if (rawTx.pqAlgorithm !== "DEMO-ED25519") {
+  if (
+    rawTx.pqAlgorithm !== "ML-DSA-65" &&
+    rawTx.pqAlgorithm !== "DEMO-ED25519"
+  ) {
     return { accepted: false, reason: "unsupported pqAlgorithm" };
   }
 
@@ -73,11 +102,23 @@ export function verifyRawPqcTransaction(
   const canonicalTxBytes = encodeCanonicalTx(fields);
   const txDigest = computeTxDigest(canonicalTxBytes);
 
-  const signatureValid = verifyDigestDemo(
-    txDigest,
-    rawTx.pqSignature,
-    rawTx.pqPublicKey
-  );
+  let signatureValid = false;
+
+  try {
+    signatureValid = verifySignature({
+      pqAlgorithm: rawTx.pqAlgorithm,
+      txDigest,
+      pqSignature: rawTx.pqSignature,
+      pqPublicKey: rawTx.pqPublicKey
+    });
+  } catch (err) {
+    return {
+      accepted: false,
+      reason: err instanceof Error ? err.message : String(err),
+      derivedSender,
+      txDigest
+    };
+  }
 
   if (!signatureValid) {
     return {
