@@ -7,7 +7,8 @@
     "send:gateway": "tsx src/send-to-gateway.ts",
     "send:invalid-signature": "tsx src/send-invalid-signature.ts",
     "demo:mldsa": "tsx src/demo-build-raw-mldsa-tx.ts",
-    "send:mldsa": "tsx src/send-mldsa-to-gateway.ts"
+    "send:mldsa": "tsx src/send-mldsa-to-gateway.ts",
+    "send:tampered-calldata": "tsx src/send-tampered-calldata-mldsa.ts"
   },
   "dependencies": {
     "@noble/post-quantum": "^0.6.1",

@@ -1,0 +1,30 @@
+Plan A Gateway Tampered Calldata Test
+
+Purpose:
+Verify that the PQC Gateway rejects a raw PQC transaction if calldata is modified after signing.
+
+Algorithm:
+ML-DSA-65
+
+Test:
+1. Generate a valid raw PQC transaction.
+2. Sign the canonical transaction digest using ML-DSA-65.
+3. Modify the calldata after signing.
+4. Submit the tampered raw PQC transaction to the gateway.
+
+Expected behavior:
+The gateway recomputes canonicalTxBytes and txDigest from the submitted transaction.
+Because calldata was changed after signing, the recomputed digest no longer matches the signature.
+The gateway must reject the transaction before relaying it to Besu.
+
+Observed behavior:
+[OK] Original signature was valid before tampering.
+[OK] Signature became invalid after calldata tampering.
+[OK] Gateway rejected the tampered transaction.
+[OK] Gateway response stage was signature-verification.
+[OK] Gateway reason was invalid signature.
+[OK] Tampered transaction was not relayed to Besu.
+
+Conclusion:
+The PQC Gateway protects transaction calldata integrity.
+If calldata is changed after signing, ML-DSA-65 verification fails and the transaction is rejected before blockchain submission.
