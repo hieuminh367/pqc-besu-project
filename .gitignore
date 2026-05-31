@@ -20,3 +20,6 @@ npm-debug.log*
 # OS/editor
 .DS_Store
 .vscode/
+
+# dependency folders
+**/node_modules/
