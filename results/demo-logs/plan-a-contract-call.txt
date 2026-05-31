@@ -1,0 +1,22 @@
+Plan A baseline contract execution test
+
+Network RPC: http://127.0.0.1:8545
+Chain ID: 1337
+
+BusinessContract: 0x6fDfeb70f1b4D35A7E11A2687B7bAf367cDeB7aA
+Trusted gateway relayer: 0x2f1AD402D1F8421BBF044417F509bb3119d7a79d
+
+Test PQC sender: 0x1111111111111111111111111111111111111111
+Call: executeFromPQC(pqcSender, 7)
+
+Tx hash: 0x6c8840bbaf8d34f5673762a8f9111a286b8a92b2b86ae795b8c5e1da08c416d1
+Receipt status: 1
+Block number: 75
+
+Counter before: 0
+Counter after: 7
+
+Conclusion:
+The relayer successfully submitted a transaction to Besu.
+The EVM executed BusinessContract.
+The contract state was updated for the PQC sender identity.
