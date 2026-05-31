@@ -1,0 +1,23 @@
+Plan A Gateway Invalid Signature Test
+
+Purpose:
+Verify that the PQC Gateway rejects a raw PQC transaction with an invalid signature.
+
+Test:
+A valid raw PQC transaction was generated first.
+Then one byte of pqSignature was modified before submitting it to the gateway.
+
+Observed result:
+Local valid after tamper: false
+Gateway HTTP status: 400
+
+Gateway response:
+accepted: false
+stage: signature-verification
+reason: invalid signature
+derivedSender: 0xc03ab977f4897e257f5a27eb33960f19838a3a3b
+txDigest: 0x0b77c802ca2852e8074349af52d96d111e51254b0d4069ea339bf8a87e79834c
+
+Conclusion:
+The PQC Gateway rejected the transaction before relaying it to Besu.
+Invalid signatures are blocked at the gateway verification stage.
