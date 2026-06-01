@@ -1,0 +1,39 @@
+Plan B2.2 Native PQC Typed Transaction Valid Test
+
+Purpose:
+Verify that Besu accepts a native typed PQC transaction through eth_sendRawTransaction.
+
+Method:
+eth_sendRawTransaction
+
+Raw transaction format:
+0x05 || RLP([
+  chainId,
+  accountNonce,
+  gasPrice,
+  gasLimit,
+  to,
+  value,
+  payload,
+  pqAlgorithm,
+  pqPublicKey,
+  pqSignature
+])
+
+Observed local result:
+Native transaction type: 0x05
+Algorithm: ML-DSA-65
+Local signatureValid: true
+PQC sender: 0x2dc34a25a655e0d232baf4d44cf3f05db17625a3
+pqNonce: 1
+accountNonce: 0
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+txDigest: 0x786a7960e6e8439674d6275862edc43da6cc40ed5c6fd872d8e84f470d2ed810
+
+Observed Besu RPC result:
+Besu returned transaction hash:
+0x83fa7a75e625c805b25551a594313d4e62a4a0f38517fa68780348081a4408c3
+
+Conclusion:
+Besu can receive and decode a native typed PQC transaction using TransactionType.PQC / 0x05 through eth_sendRawTransaction.
