@@ -176,3 +176,65 @@ B2.3 - Native PQC transaction block inclusion and receipt evidence.
 This should prove that a valid TransactionType.PQC transaction can be included
 in a QBFT block and that invalid PQC typed transactions are rejected by importing
 nodes.
+
+---
+
+## 9. B2.3 Native PQC Block Inclusion and EVM Execution
+
+B2.3 completed native PQC typed transaction block inclusion and EVM execution.
+
+Observed successful transaction:
+
+```text
+transactionHash:
+0xda99ae44df03ef1d071a0c4b1a798a36c873b41aed1dad4662b6ef8804a78884
+
+blockNumber:
+0xfe
+
+status:
+0x1
+
+type:
+0x5
+
+from:
+0x04b01bb8ca5e290f1a53ee70a1cf53b224e2d51c
+
+to:
+0x6fdfeb70f1b4d35a7e11a2687b7baf367cdeb7aa
+
+Observed contract event:
+
+NativePQCActionExecuted
+
+pqcSender:
+0x04b01bb8ca5e290f1a53ee70a1cf53b224e2d51c
+
+value:
+7
+
+counterAfter:
+7
+
+Conclusion:
+
+[OK] Native PQC typed transaction is accepted through eth_sendRawTransaction.
+[OK] TransactionType.PQC / 0x05 is decoded by Besu.
+[OK] ML-DSA-65 signature is validated by Besu native validation.
+[OK] Native PQC transaction is included in a QBFT block.
+[OK] EVM execution succeeds.
+[OK] Contract sees PQC-derived sender as msg.sender.
+[OK] NativePQCActionExecuted event is emitted.
+
+Updated B2 claim:
+
+Plan B2 implements an experimental native PQC typed transaction path in Besu:
+TransactionType.PQC / 0x05, PQC metadata serialization, ML-DSA-65 validation,
+QBFT block inclusion, and EVM execution with PQC-derived msg.sender.
+
+Remaining future work:
+
+[ ] Production-grade transaction pool policy for PQC transactions.
+[ ] Full long-running P2P stress test.
+[ ] PQC-QBFT consensus signatures.

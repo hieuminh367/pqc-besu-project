@@ -1062,3 +1062,50 @@ B2 currently proves native PQC typed transaction decoding and native ML-DSA-65
 signature validation. Full P2P propagation, block inclusion, block import
 validation, and PQC-QBFT consensus are not completed yet.
 ```
+
+31. Plan B2 Native PQC Block Execution Completed
+
+Plan B2 native PQC transaction execution has been completed at demo level.
+
+Successful receipt:
+
+```text
+transactionHash:
+0xda99ae44df03ef1d071a0c4b1a798a36c873b41aed1dad4662b6ef8804a78884
+
+blockNumber:
+0xfe
+
+status:
+0x1
+
+type:
+0x5
+
+from:
+0x04b01bb8ca5e290f1a53ee70a1cf53b224e2d51c
+
+to:
+0x6fdfeb70f1b4d35a7e11a2687b7baf367cdeb7aa
+```
+
+Completed:
+
+```text
+[OK] Native PQC TransactionType.PQC / 0x05.
+[OK] PQC transaction encoder/decoder.
+[OK] pqPublicKey, pqSignature, and pqAlgorithm preserved in transaction payload.
+[OK] ML-DSA-65 signature validation in Besu native transaction validation.
+[OK] Invalid native PQC typed signatures rejected.
+[OK] Valid native PQC typed transaction accepted through eth_sendRawTransaction.
+[OK] Valid native PQC typed transaction included in QBFT block.
+[OK] EVM execution successful.
+[OK] Contract event emitted with PQC-derived msg.sender.
+```
+
+Boundary:
+
+```text
+This completes Plan B native transaction demo scope.
+PQC-QBFT consensus signatures remain future work.
+```

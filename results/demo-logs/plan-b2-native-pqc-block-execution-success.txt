@@ -1,0 +1,59 @@
+Plan B2 Native PQC Typed Transaction Block Execution Success
+
+Purpose:
+Verify that a native PQC typed transaction using TransactionType.PQC / 0x05 can be accepted by Besu, included in a QBFT block, and executed successfully by the EVM.
+
+Method:
+eth_sendRawTransaction
+
+Raw transaction format:
+0x05 || RLP([
+  chainId,
+  accountNonce,
+  gasPrice,
+  gasLimit,
+  to,
+  value,
+  payload,
+  pqAlgorithm,
+  pqPublicKey,
+  pqSignature
+])
+
+Observed local result:
+Native transaction type: 0x05
+Algorithm: ML-DSA-65
+Local signatureValid: true
+PQC sender: 0x04b01bb8ca5e290f1a53ee70a1cf53b224e2d51c
+pqNonce: 1
+accountNonce: 0
+to: 0x6fDfeb70f1b4D35A7E11A2687B7bAf367cDeB7aA
+contractCall: executeNativePQC(uint256)
+contractValue: 7
+gasPrice: 0
+gasLimit: 800000
+
+Observed Besu receipt:
+transactionHash: 0xda99ae44df03ef1d071a0c4b1a798a36c873b41aed1dad4662b6ef8804a78884
+blockNumber: 0xfe
+status: 0x1
+type: 0x5
+from: 0x04b01bb8ca5e290f1a53ee70a1cf53b224e2d51c
+to: 0x6fdfeb70f1b4d35a7e11a2687b7baf367cdeb7aa
+gasUsed: 0xb422
+effectiveGasPrice: 0x0
+
+Observed event:
+NativePQCActionExecuted emitted by:
+0x6fdfeb70f1b4d35a7e11a2687b7baf367cdeb7aa
+
+Event indexed pqcSender:
+0x04b01bb8ca5e290f1a53ee70a1cf53b224e2d51c
+
+Event data:
+value: 7
+counterAfter: 7
+
+Conclusion:
+Plan B native transaction path is successful at the transaction/block/EVM execution level.
+Besu accepts a native PQC typed transaction, validates ML-DSA-65, includes it in a QBFT block, executes the EVM call, and exposes the PQC-derived sender as msg.sender to the contract.
