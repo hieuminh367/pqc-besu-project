@@ -913,3 +913,58 @@ Successful receipt and state update.
 Frontend dashboard interaction.
 PQC transaction dump containing pqPublicKey and pqSignature.
 ```
+
+---
+
+## 29. Plan B1.0 Besu PQC RPC Entry
+
+An experimental Besu-side RPC method has been added in the Besu fork:
+
+```text
+eth_sendRawPqcTransaction
+```
+
+This method currently implements Plan B1.0 entry-layer functionality.
+
+Completed in Besu fork:
+
+```text
+[OK] New RPC enum added.
+[OK] New RPC method class added.
+[OK] RPC method registered in EthJsonRpcMethods.
+[OK] Besu accepts raw PQC transaction object through JSON-RPC.
+[OK] Besu parses raw PQC transaction fields.
+[OK] Besu recomputes canonicalTxBytes.
+[OK] Besu recomputes txDigest.
+[OK] Besu derives sender from pqPublicKey.
+[OK] Besu rejects malformed/sender-mismatched input path.
+```
+
+Observed evidence:
+
+```text
+Local txDigest:
+0xe707242a1f9d595dd5260f00dfcdee06f7d9cd203c8bb236890c1d7b8d6f4f57
+
+Besu txDigest:
+0xe707242a1f9d595dd5260f00dfcdee06f7d9cd203c8bb236890c1d7b8d6f4f57
+
+Local sender:
+0x5dba999076ad86e83ceeb8a554d2295fd3144663
+
+Besu derivedSender:
+0x5dba999076ad86e83ceeb8a554d2295fd3144663
+```
+
+Current limitation:
+
+```text
+Java-side ML-DSA-65 cryptographic verification is not implemented yet.
+The current B1.0 implementation verifies parsing, canonical encoding, txDigest computation, sender derivation, and ML-DSA key/signature length.
+```
+
+Next target:
+
+```text
+Plan B1.1: integrate Java-side ML-DSA-65 verification into eth_sendRawPqcTransaction.
+```
