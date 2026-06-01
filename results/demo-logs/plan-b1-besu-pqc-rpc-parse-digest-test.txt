@@ -1,0 +1,38 @@
+Plan B1.0 Besu PQC RPC Parse and Digest Test
+
+Purpose:
+Verify that the custom Besu RPC method eth_sendRawPqcTransaction can receive a raw PQC transaction, parse it, recompute canonicalTxBytes, recompute txDigest, and derive sender from pqPublicKey.
+
+Method:
+eth_sendRawPqcTransaction
+
+Local result:
+Algorithm: ML-DSA-65
+Local signatureValid: true
+Sender: 0x5dba999076ad86e83ceeb8a554d2295fd3144663
+pqNonce: 1
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+txDigest: 0xe707242a1f9d595dd5260f00dfcdee06f7d9cd203c8bb236890c1d7b8d6f4f57
+
+Besu RPC result:
+accepted: true
+stage: b1-entry-layer-parse-and-digest
+type: PQC_TRANSACTION
+pqAlgorithm: ML-DSA-65
+derivedSender: 0x5dba999076ad86e83ceeb8a554d2295fd3144663
+providedSender: 0x5dba999076ad86e83ceeb8a554d2295fd3144663
+txDigest: 0xe707242a1f9d595dd5260f00dfcdee06f7d9cd203c8bb236890c1d7b8d6f4f57
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+mldsaLengthLooksValid: true
+signatureVerification: pending-b1.1-java-mldsa-provider
+besuSidePqcParsing: true
+besuSideSenderDerivation: true
+besuSideDigestComputation: true
+
+Conclusion:
+Besu-side PQC RPC entry works.
+Besu recomputes the same canonicalTxBytes and txDigest as the TypeScript pqc-core implementation.
+Besu derives the same PQC sender from pqPublicKey.
+Java-side ML-DSA cryptographic verification is the next B1.1 target.
