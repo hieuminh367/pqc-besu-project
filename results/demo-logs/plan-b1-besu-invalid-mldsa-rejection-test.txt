@@ -1,0 +1,40 @@
+Plan B1.1 Besu-side Invalid ML-DSA Rejection Test
+
+Purpose:
+Verify that the custom Besu RPC method eth_sendRawPqcTransaction rejects a raw PQC transaction with an invalid ML-DSA-65 signature.
+
+Method:
+eth_sendRawPqcTransaction
+
+Test:
+A valid raw PQC transaction was generated first.
+Then one byte of pqSignature was modified before submission to Besu RPC.
+
+Observed local result:
+Algorithm: ML-DSA-65
+Local valid after tamper: false
+Sender: 0x7be4b05427e5fdfee76207150fa6fd7b64ce6582
+pqNonce: 999
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+txDigest: 0xd9da44fd05080ec43bbfa5a27c73e958416ef80436de440226332369ac3573ab
+
+Observed Besu RPC result:
+accepted: false
+stage: mldsa-verification
+reason: invalid ML-DSA-65 signature
+derivedSender: 0x7be4b05427e5fdfee76207150fa6fd7b64ce6582
+providedSender: 0x7be4b05427e5fdfee76207150fa6fd7b64ce6582
+txDigest: 0xd9da44fd05080ec43bbfa5a27c73e958416ef80436de440226332369ac3573ab
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+mldsaLengthLooksValid: true
+signatureValid: false
+
+Conclusion:
+Besu-side ML-DSA-65 verification rejects invalid signatures inside eth_sendRawPqcTransaction.
+This confirms that Plan B1.1 verifies cryptographic validity in the Besu process, not only in the external gateway.
+
+Current scope:
+This is Plan B1.1 entry-layer verification.
+It does not yet implement native PQC txpool, account nonce/gas/balance handling, block inclusion, or block import validation.

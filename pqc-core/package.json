@@ -7,7 +7,8 @@
     "send:mldsa": "tsx src/send-mldsa-to-gateway.ts",
     "send:invalid-signature": "tsx src/send-invalid-signature.ts",
     "send:tampered-calldata": "tsx src/send-tampered-calldata-mldsa.ts",
-    "send:mldsa:besu-rpc": "tsx src/send-mldsa-to-besu-rpc.ts"
+    "send:mldsa:besu-rpc": "tsx src/send-mldsa-to-besu-rpc.ts",
+    "send:invalid-mldsa:besu-rpc": "tsx src/send-invalid-mldsa-to-besu-rpc.ts"
   },
   "dependencies": {
     "@noble/post-quantum": "^0.6.1",
