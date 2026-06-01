@@ -1015,3 +1015,50 @@ Current scope:
 This is Plan B1 entry-layer validation.
 It does not yet implement native PQC txpool, native PQC account model, block import validation, or PQC-QBFT consensus.
 ```
+
+---
+
+## 30. Plan B2 Native PQC Transaction Path
+
+Plan B2 has been started in the Besu fork.
+
+Completed:
+
+```text
+[OK] B2.0 Besu-side verified PQC txpool submission.
+[OK] TransactionType.PQC / 0x05 added.
+[OK] Native PQC transaction encoder added.
+[OK] Native PQC transaction decoder added.
+[OK] Transaction now carries pqPublicKey, pqSignature, and pqAlgorithm.
+[OK] Besu native validator verifies ML-DSA-65 for PQC typed transactions.
+[OK] Valid native PQC typed transaction is accepted through eth_sendRawTransaction.
+[OK] Invalid native PQC typed signature is rejected with Invalid signature.
+```
+
+Valid native PQC typed transaction evidence:
+
+```text
+method: eth_sendRawTransaction
+type: 0x05
+local signatureValid: true
+Besu returned tx hash:
+0x83fa7a75e625c805b25551a594313d4e62a4a0f38517fa68780348081a4408c3
+```
+
+Invalid native PQC typed transaction evidence:
+
+```text
+method: eth_sendRawTransaction
+type: 0x05
+local valid after tamper: false
+Besu error code: -32002
+Besu error message: Invalid signature
+```
+
+Current B2 scope:
+
+```text
+B2 currently proves native PQC typed transaction decoding and native ML-DSA-65
+signature validation. Full P2P propagation, block inclusion, block import
+validation, and PQC-QBFT consensus are not completed yet.
+```
