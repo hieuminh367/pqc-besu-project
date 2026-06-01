@@ -968,3 +968,50 @@ Next target:
 ```text
 Plan B1.1: integrate Java-side ML-DSA-65 verification into eth_sendRawPqcTransaction.
 ```
+
+---
+
+## 29. Plan B1 Besu Entry-Layer PQC Validation
+
+Plan B1 has been started and implemented in the Besu fork.
+
+Custom RPC method:
+
+```text
+eth_sendRawPqcTransaction
+```
+
+Completed:
+
+```text
+[OK] Besu receives raw PQC transaction object.
+[OK] Besu parses raw PQC transaction fields.
+[OK] Besu recomputes canonicalTxBytes.
+[OK] Besu recomputes txDigest.
+[OK] Besu derives PQC sender from pqPublicKey.
+[OK] Besu verifies ML-DSA-65 signature using Java-side verifier.
+[OK] Besu accepts valid ML-DSA-65 signatures.
+[OK] Besu rejects invalid ML-DSA-65 signatures.
+```
+
+Evidence:
+
+```text
+Valid ML-DSA transaction:
+signatureVerification = verified-by-bouncycastle-mldsa65
+signatureValid = true
+accepted = true
+
+Invalid ML-DSA transaction:
+stage = mldsa-verification
+reason = invalid ML-DSA-65 signature
+signatureValid = false
+accepted = false
+```
+
+Current scope:
+
+```text
+This is Plan B1 entry-layer validation.
+It does not yet implement native PQC txpool, native PQC account model, block import validation, or PQC-QBFT consensus.
+```
