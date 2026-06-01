@@ -1,0 +1,41 @@
+Plan B1.1 Besu-side ML-DSA Verification Test
+
+Purpose:
+Verify that the custom Besu RPC method eth_sendRawPqcTransaction performs Java-side ML-DSA-65 signature verification.
+
+Method:
+eth_sendRawPqcTransaction
+
+Local TypeScript result:
+Algorithm: ML-DSA-65
+Local signatureValid: true
+Sender: 0x919a9edc4cf2078c9d32ed34490e71b761828e8b
+pqNonce: 1
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+txDigest: 0x2836a3e44f2797ee1eca858b716a1a17698ee71bcd615010af99438a021101eb
+
+Besu RPC result:
+accepted: true
+stage: b1-entry-layer-parse-and-digest
+pqAlgorithm: ML-DSA-65
+derivedSender: 0x919a9edc4cf2078c9d32ed34490e71b761828e8b
+providedSender: 0x919a9edc4cf2078c9d32ed34490e71b761828e8b
+txDigest: 0x2836a3e44f2797ee1eca858b716a1a17698ee71bcd615010af99438a021101eb
+pqPublicKeyBytes: 1952
+pqSignatureBytes: 3309
+mldsaLengthLooksValid: true
+signatureVerification: verified-by-bouncycastle-mldsa65
+signatureValid: true
+besuSideMldsaVerification: true
+besuSidePqcParsing: true
+besuSideSenderDerivation: true
+besuSideDigestComputation: true
+
+Conclusion:
+Besu-side ML-DSA-65 verification works inside the custom eth_sendRawPqcTransaction RPC method.
+The local TypeScript signer and the Java Besu verifier agree on txDigest, sender derivation, public key size, signature size, and signature validity.
+
+Current scope:
+This is Plan B1.1 entry-layer verification.
+It does not yet implement native PQC txpool, account nonce/gas/balance handling, block inclusion, or block import validation.
