@@ -1,0 +1,40 @@
+Plan B2.0 Txpool Local-only Finding
+
+Purpose:
+Investigate whether a Besu-side verified PQC transaction, converted into an internal FRONTIER Transaction with PQC-derived sender, can propagate through the 4-node QBFT network and be included in a block.
+
+Observed result:
+- eth_sendRawPqcTransaction returned accepted: true.
+- Besu verified ML-DSA-65 successfully.
+- Besu derived the PQC sender successfully.
+- Besu submitted an internal Transaction to node 1 txpool.
+- txPoolAccepted was true.
+- eth_getTransactionReceipt returned null.
+- txpool_besuPendingTransactions showed the transaction only on node 1.
+- node 2, node 3, and node 4 did not show the pending transaction.
+- QBFT peerCount was 0x3.
+- blockNumber was increasing.
+
+Observed pending transaction:
+from: 0x840f6889ca8bae42e2ea50bc12e0f44d07b8684b
+nonce: 0x0
+hash: 0x29a85a6426ccb7cbd47a1f6b56e2926124c8913e52e7ded92a5334c9f93d6ce8
+to: 0x6fdfeb70f1b4d35a7e11a2687b7baf367cdeb7aa
+
+Conclusion:
+The B2.0 approach verifies ML-DSA inside Besu and can inject an internal transaction into the local txpool, but it is not sufficient for native P2P/block inclusion.
+
+Reason:
+The PQC sender is currently set only in the local Java Transaction object after ML-DSA verification. When serialized as a normal FRONTIER transaction, the raw transaction does not include pqPublicKey, pqSignature, pqAlgorithm, or PQC sender metadata. Other nodes decode the transaction as a normal Ethereum transaction and cannot derive or verify the PQC sender.
+
+Implication:
+A true native PQC transaction path requires a dedicated PQC transaction type and encoding that preserves PQC metadata across P2P propagation and block import.
+
+Next target:
+Plan B2.2 should implement a native PQC transaction type with:
+- TransactionType.PQC
+- PQC transaction encoder/decoder
+- pqPublicKey and pqSignature serialized into the transaction
+- Besu-side ML-DSA verification during validation
+- PQC sender derivation in Transaction.getSender()
+- block import validation for PQC transactions
