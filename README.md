@@ -260,6 +260,28 @@ results/demo-logs/
 results/receipts/plan-a-valid-mldsa-receipt.json
 ```
 
+---
+
+## Besu Native Fork
+
+The native Besu Plan B implementation is maintained in a separate Besu fork repository:
+
+```text
+https://github.com/hieuminh367/pqc-besu-native-fork/tree/plan-b2-native-pqc-tx
+```
+
+This branch contains:
+
+```text
+[OK] eth_sendRawPqcTransaction
+[OK] Besu-side ML-DSA-65 verification
+[OK] TransactionType.PQC / 0x05
+[OK] PQC transaction encoder/decoder
+[OK] native PQC typed transaction validation
+[OK] valid native PQC typed transaction accepted
+[OK] invalid native PQC typed signature rejected
+```
+
 ## 12. Next Target
 
 Next implementation target:
