@@ -5,20 +5,21 @@ Post-Quantum Transaction and Consensus Architecture for Hyperledger Besu.
 This repository contains the implemented application-layer project code for:
 
 ```text
-Plan A: PQC Gateway PoC on a real Besu QBFT private network
 Plan B1: Besu entry-layer PQC validation through custom RPC
+Plan B2: Native PQC typed transaction path in Besu with QBFT block execution
 ```
 
 ## 1. Current Status
 
 ```text
-[OK] Plan A core implementation completed.
-[OK] Plan A frontend/backend/gateway demo completed.
 [OK] Real ML-DSA-65 signing and verification completed.
 [OK] Besu QBFT private network used as blockchain execution layer.
 [OK] Plan B1.0 custom Besu RPC added.
 [OK] Plan B1.1 Besu-side ML-DSA-65 verification completed.
-[NOT YET] Plan B2 native PQC txpool/account/block path.
+[OK] Plan B2 native PQC typed transaction path completed at demo level.
+[OK] Frontend -> backend -> ABI wrapper -> native tx 0x05 -> Besu -> receipt flow stabilized.
+[LEGACY] Relayer/gateway path archived in docs/legacy for reference only.
+[NOT YET] Production-grade PQC txpool policy / long-running P2P stress test.
 [NOT YET] Plan B3 PQC-QBFT consensus signatures.
 ```
 
@@ -26,11 +27,11 @@ Plan B1: Besu entry-layer PQC validation through custom RPC
 
 ```text
 app/
-├── backend/              # Backend API, direct ABI calldata builder, direct ML-DSA raw PQC tx builder
+├── backend/              # Backend API (Plan B native endpoint + explorer views)
 ├── frontend/             # React + Tailwind dashboard
 ├── contracts/            # BusinessContract and Hardhat scripts
 ├── pqc-core/             # Canonical encoder, txDigest, sender derivation, ML-DSA signing scripts
-├── pqc-gateway/          # Plan A PQC Gateway verifier and relayer
+├── docs/legacy/          # Legacy relayer-path references and old gateway proofs (for history only)
 ├── network/              # Local Besu QBFT network config
 ├── scripts/              # Demo runner scripts
 ├── docs/                 # Project documentation and progress logs
@@ -43,48 +44,16 @@ The Besu source fork is kept outside this app repository:
 ~/pqc-besu-project/besu-fork
 ```
 
-Besu fork branch for Plan B:
+Besu fork branch for current Plan B native work:
 
 ```text
-plan-b1-pqc-rpc
+plan-b2-native-pqc-tx
 ```
 
-## 3. Plan A Architecture
+## 3. Legacy references (for history)
 
-```text
-Frontend Dashboard
-    |
-    v
-Backend API
-    |
-    | builds ABI calldata
-    | builds raw PQC transaction
-    | signs txDigest with ML-DSA-65
-    v
-PQC Gateway
-    |
-    | verifies ML-DSA-65 signature
-    | derives PQC sender from pqPublicKey
-    | checks pqNonce
-    | rejects invalid/tampered/replayed tx
-    v
-Gateway Relayer
-    |
-    v
-Besu QBFT Private Network
-    |
-    v
-BusinessContract
-    |
-    v
-Receipt / Event / State Update
-```
-
-Plan A claim:
-
-Plan A demonstrates pre-chain ML-DSA-65 transaction verification through a PQC Gateway in front of a real Besu QBFT private network.
-
-Plan A does not claim native Besu transaction validation.
+- `docs/legacy/` stores the relayer-gateway proof chain and runbook.
+- `results/legacy/` stores legacy Plan A evidence logs/receipts.
 
 ## 4. Plan B1 Architecture
 
@@ -113,30 +82,59 @@ Plan B1 implements Besu entry-layer PQC validation through a custom eth_sendRawP
 
 Plan B1 does not yet implement native txpool, account nonce/gas/balance, block import validation, or PQC-QBFT consensus.
 
-## 5. Important Non-Claims
+## 5. Plan B2 Architecture
 
 ```text
-[NO] Besu native transaction validation fully uses ML-DSA.
-[NO] Besu txpool accepts native PQC transaction type.
-[NO] EVM msg.sender is natively derived from pqPublicKey.
+Frontend Dashboard
+    |
+    v
+Backend Native Endpoint
+    |
+    | builds ABI calldata from deployed contract ABI
+    | resolves pqNonce = auto from Besu pending account nonce
+    | signs txDigest with ML-DSA-65
+    | serializes native PQC transaction type 0x05
+    v
+Besu JSON-RPC
+    |
+    | eth_sendRawTransaction
+    v
+Besu Native PQC Validation
+    |
+    | decodes TransactionType.PQC
+    | derives sender from pqPublicKey
+    | verifies ML-DSA-65 signature
+    | includes transaction in QBFT block
+    v
+Receipt / Event / State Readback
+```
+
+Plan B2 claim:
+
+Plan B2 implements an experimental native PQC transaction path in Besu: ABI-driven calldata, native typed transaction `0x05`, Besu-side ML-DSA-65 validation, QBFT block inclusion, and EVM execution with PQC-derived `msg.sender`.
+
+## 6. Current Limits
+
+```text
+[NO] Production-grade PQC txpool policy is finalized.
+[NO] Long-running multi-node P2P stress evidence is completed.
 [NO] QBFT consensus messages are signed with ML-DSA.
 [NO] Gateway alone makes Besu fully quantum-safe at protocol level.
 ```
 
-These are Plan B2 and Plan B3 targets.
+These are the remaining B2 hardening items and the Plan B3 target.
 
-## 6. Main Demo Services
+## 7. Main Demo Services (Plan B Submission Focus)
 
 Local endpoints:
 
 ```text
 Besu RPC:     http://127.0.0.1:8545
-PQC Gateway:  http://127.0.0.1:3001
 Backend API:  http://127.0.0.1:4000
 Frontend UI:  http://127.0.0.1:5173
 ```
 
-## 7. Environment
+## 8. Environment
 
 Create local `app/.env` from `.env.example`:
 
@@ -144,22 +142,20 @@ Create local `app/.env` from `.env.example`:
 cp .env.example .env
 ```
 
-Required local variables:
+Required local variables for Plan B native run:
 
 ```text
 BESU_RPC_URL=http://127.0.0.1:8545
 CHAIN_ID=1337
 BUSINESS_CONTRACT_ADDRESS=0x...
-TRUSTED_GATEWAY_RELAYER=0x...
 RELAYER_PRIVATE_KEY=0x...
-GATEWAY_PORT=3001
 BACKEND_PORT=4000
-GATEWAY_URL=http://127.0.0.1:3001
+NATIVE_PQC_CONTRACT_ADDRESS=0x...
 ```
 
 Do not commit `.env`.
 
-## 8. Run Plan A Demo
+## 9. Run Plan B Native Demo
 
 Start services in separate terminals.
 
@@ -171,27 +167,16 @@ Use the Besu fork binary from:
 ~/pqc-besu-project/besu-fork
 ```
 
-Start the four QBFT validators as described in:
+Start the QBFT validators for your local network.
 
-```text
-docs/runbook-plan-a-b1.md
-```
-
-Terminal 2: PQC Gateway
-
-```text
-cd ~/pqc-besu-project/app
-./scripts/run-gateway.sh
-```
-
-Terminal 3: Backend
+Terminal 2: Backend
 
 ```text
 cd ~/pqc-besu-project/app/backend
 npm run dev
 ```
 
-Terminal 4: Frontend
+Terminal 3: Frontend
 
 ```text
 cd ~/pqc-besu-project/app/frontend
@@ -204,18 +189,17 @@ Open:
 http://127.0.0.1:5173
 ```
 
-## 9. Run CLI Demo Scripts
+## 10. CLI Scripts
 
 ```text
 cd ~/pqc-besu-project/app
-
 ./scripts/check-besu-rpc.sh
 ./scripts/send-valid-mldsa-tx.sh
-./scripts/send-invalid-signature.sh
-./scripts/send-tampered-calldata.sh
 ```
 
-## 10. Run Plan B1 Besu RPC Tests
+These scripts are for active Plan B verification and local checks.
+
+## 11. Run Plan B1 Besu RPC Tests
 
 Valid ML-DSA transaction to Besu RPC:
 
@@ -249,20 +233,63 @@ reason: invalid ML-DSA-65 signature
 signatureValid: false
 ```
 
-## 11. Evidence
+## 12. Run Plan B2 Native App Demo
+
+Start the QBFT network, backend, and frontend as above, then open:
+
+```text
+http://127.0.0.1:5173
+```
+
+Use the native transaction card in the dashboard.
+
+Expected demo flow:
+
+```text
+frontend
+  -> POST /plan-b/native-buy
+  -> backend ABI-encodes executeNativePQC(uint256)
+  -> backend resolves pqNonce = auto from Besu pending account nonce
+  -> backend signs native PQC tx type 0x05 with ML-DSA-65
+  -> Besu eth_sendRawTransaction
+  -> receipt status 0x1
+```
+
+Expected evidence on success:
+
+```text
+nativeTransactionType: 0x05
+receipt.status: 0x1
+txHash: 0x...
+pqcSender: 0x...
+```
+
+## 13. Evidence
 
 Important evidence files:
 
 ```text
 docs/completed-summary.md
 docs/plan-b1-progress.md
-results/demo-logs/
-results/receipts/plan-a-valid-mldsa-receipt.json
+docs/plan-b2-progress.md
+besu-native/README.md
+results/demo-logs/plan-b2-native-pqc-block-execution-success.txt
+results/demo-logs/plan-b2-native-pqc-typed-valid-test.txt
+results/demo-logs/plan-b2-native-pqc-typed-invalid-signature-test.txt
 ```
 
----
+## 14. Submission reading order
 
-## Besu Native Fork
+Nên đọc theo thứ tự sau để nộp đúng trọng tâm Plan B:
+
+- [docs/completed-summary.md](/home/minhhieu/pqc-besu-project/app/docs/completed-summary.md)
+- [docs/plan-b1-progress.md](/home/minhhieu/pqc-besu-project/app/docs/plan-b1-progress.md)
+- [docs/plan-b2-progress.md](/home/minhhieu/pqc-besu-project/app/docs/plan-b2-progress.md)
+- [docs/submission-checklist.md](/home/minhhieu/pqc-besu-project/app/docs/submission-checklist.md)
+- [results/demo-logs/](/home/minhhieu/pqc-besu-project/app/results/demo-logs)
+- [besu-native/README.md](/home/minhhieu/pqc-besu-project/app/besu-native/README.md)
+
+## 15. Besu Native Fork
 
 The native Besu Plan B implementation is maintained in a separate Besu fork repository:
 
@@ -282,7 +309,7 @@ This branch contains:
 [OK] invalid native PQC typed signature rejected
 ```
 
-## 12. Next Target
+## 16. Next Target
 
 Next implementation target:
 

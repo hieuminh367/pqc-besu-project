@@ -1,4 +1,4 @@
-Plan A Gateway Invalid Signature Test
+Relayer Gateway Invalid Signature Test
 
 Purpose:
 Verify that the PQC Gateway rejects a raw PQC transaction with an invalid signature.

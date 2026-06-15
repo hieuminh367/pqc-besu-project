@@ -1,4 +1,4 @@
-Plan A Gateway Nonce Replay Test
+Relayer Gateway Nonce Replay Test
 
 Purpose:
 Verify that the PQC Gateway rejects reused pqNonce for the same PQC sender.

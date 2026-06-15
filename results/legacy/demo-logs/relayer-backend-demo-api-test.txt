@@ -1,7 +1,7 @@
-Plan A Backend Demo API Test
+Relayer Backend Demo API Test
 
 Purpose:
-Verify that the backend can trigger Plan A demo flows through HTTP API endpoints.
+Verify that the backend can trigger Relayer demo flows through HTTP API endpoints.
 
 Backend endpoint:
 http://127.0.0.1:4000
@@ -59,4 +59,4 @@ blockNumber: 724
 counterAfter: 7
 
 Conclusion:
-The backend demo API successfully triggers the Plan A PQC Gateway PoC flows and provides an HTTP API layer for frontend/demo integration.
+The backend demo API successfully triggers the Relayer PQC Gateway PoC flows and provides an HTTP API layer for frontend/demo integration.

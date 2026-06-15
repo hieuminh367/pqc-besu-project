@@ -84,7 +84,7 @@ async function main() {
   const outDir = path.resolve("../results/receipts");
   fs.mkdirSync(outDir, { recursive: true });
 
-  const outPath = path.join(outDir, "plan-a-valid-mldsa-receipt.json");
+  const outPath = path.join(outDir, "relayer-b1-valid-mldsa-receipt.json");
   fs.writeFileSync(outPath, JSON.stringify(evidence, null, 2));
 
   console.log("Evidence saved to:", outPath);

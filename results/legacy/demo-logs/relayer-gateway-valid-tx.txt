@@ -1,4 +1,4 @@
-Plan A Gateway Valid Transaction Test
+Relayer Gateway Valid Transaction Test
 
 Flow:
 raw PQC transaction

@@ -1,7 +1,7 @@
 
-Runbook - Plan A Gateway PoC and Plan B1 Besu PQC RPC
+Runbook - Relayer Gateway PoC and Plan B1 Besu PQC RPC
 
-This runbook explains how to run the implemented Plan A demo and Plan B1 Besu-side PQC RPC validation.
+This runbook explains how to run the implemented relayer gateway PoC and Plan B1 Besu-side PQC RPC validation.
 
 1. Prerequisites
 
@@ -215,7 +215,7 @@ Tampered calldata test
 Run history
 ```
 
-8. Plan A CLI Tests
+8. Relayer Gateway CLI Tests
 
 Valid ML-DSA transaction through Gateway:
 
@@ -303,7 +303,7 @@ This proves that Besu rejects invalid ML-DSA-65 signatures inside the custom RPC
 Completed:
 
 ```text
-Plan A Gateway PoC.
+Relayer Gateway PoC.
 Plan B1 Besu entry-layer ML-DSA verification.
 ```
 

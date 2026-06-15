@@ -1,10 +1,8 @@
-
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Blocks,
   CheckCircle2,
-  Coins,
   Copy,
   Database,
   FileJson,
@@ -13,12 +11,17 @@ import {
   Layers3,
   Network,
   Search,
-  Send,
   ShieldCheck,
   Wallet,
   XCircle
 } from "lucide-react";
-import { api, type DirectMldsaResponse, type ExplorerBlock } from "./api/client";
+import {
+  api,
+  type ExplorerBlock,
+  type NativePqcTransactionResponse
+} from "./api/client";
+import PlanBNativePqcCard from "./components/PlanBNativePqcCard";
+import { buildNativeTransactionDump } from "./utils/nativeTransactionDump";
 
 type RunLog = {
   id: string;
@@ -44,6 +47,21 @@ async function copy(value?: string) {
   await navigator.clipboard.writeText(value);
 }
 
+function hexToNumber(value?: string | null): number | null {
+  if (!value) return null;
+  return Number.parseInt(value, 16);
+}
+
+function parseCounterAfterFromReceipt(result: NativePqcTransactionResponse): string {
+  const data = result.receipt?.logs?.[0]?.data;
+
+  if (typeof data !== "string" || !data.startsWith("0x") || data.length < 130) {
+    return result.contractValue;
+  }
+
+  return BigInt(`0x${data.slice(66, 130)}`).toString();
+}
+
 function Sidebar() {
   const items = [
     ["Home", Home],
@@ -51,7 +69,7 @@ function Sidebar() {
     ["Blocks", Blocks],
     ["Transactions", Activity],
     ["Wallet", Wallet],
-    ["Gateway", ShieldCheck],
+    ["Native PQC", ShieldCheck],
     ["Contract", Database]
   ] as const;
 
@@ -84,9 +102,9 @@ function Sidebar() {
       </nav>
 
       <div className="mx-4 mt-4 rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-600 p-5 text-white shadow-xl">
-        <div className="text-sm font-semibold">Plan A Demo</div>
+        <div className="text-sm font-semibold">Plan B Native</div>
         <div className="mt-2 text-xs leading-5 text-violet-100">
-          ML-DSA-65 Gateway verification before Besu submission.
+          ML-DSA-65 signed native PQC transactions sent directly to Besu.
         </div>
       </div>
     </aside>
@@ -163,90 +181,24 @@ function JsonDump({ title, data }: { title: string; data: unknown }) {
 export default function App() {
   const [overview, setOverview] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
-  const [value, setValue] = useState("7");
-  const [loading, setLoading] = useState<string | null>(null);
-  const [lastTx, setLastTx] = useState<DirectMldsaResponse | null>(null);
+  const [lastTx, setLastTx] = useState<NativePqcTransactionResponse | null>(null);
   const [txDump, setTxDump] = useState<any>(null);
+  const [counterAfter, setCounterAfter] = useState<string | null>(null);
   const [logs, setLogs] = useState<RunLog[]>([]);
 
   const latestBlocks: ExplorerBlock[] = overview?.result?.blocks ?? [];
 
-  const latestTxHash = lastTx?.result?.gateway?.relay?.txHash;
+  const latestTxHash = lastTx?.txHash;
 
   const pqcTransactionDump = useMemo(() => {
     if (!lastTx) return null;
-
-    const rawTx = lastTx.result.rawPqcTransaction;
-    const local = lastTx.result.localVerification;
-    const gateway = lastTx.result.gateway;
-    const relay = gateway.relay;
-
-    return {
-      title: "PQC Besu Transaction Dump",
-      note:
-        "This is not a Bitcoin transaction. This dump shows a raw PQC transaction, ML-DSA-65 proof data, gateway verification result, and the relayed Besu transaction.",
-      network: {
-        chainId: health?.chainId ?? "1337",
-        consensus: "QBFT",
-        besuRpc: health?.besuRpcUrl,
-        gateway: health?.gatewayUrl,
-        backend: api.backendUrl
-      },
-      contractCall: {
-        contractAddress: rawTx.to,
-        functionName: "executeFromPQC(address pqcSender, uint256 value)",
-        pqcSender: rawTx.sender,
-        value,
-        abiCalldata: rawTx.data
-      },
-      pqcRawTransaction: {
-        type: rawTx.type,
-        chainId: rawTx.chainId,
-        pqNonce: rawTx.pqNonce,
-        to: rawTx.to,
-        value: rawTx.value,
-        gasLimit: rawTx.gasLimit,
-        gasPrice: rawTx.gasPrice,
-        data: rawTx.data,
-        pqAlgorithm: rawTx.pqAlgorithm,
-        sender: rawTx.sender,
-        pqPublicKey: rawTx.pqPublicKey,
-        pqSignature: rawTx.pqSignature
-      },
-      canonicalSigning: {
-        domainSeparator: "PQC_BESU_TX_V1",
-        txDigest: local.txDigest,
-        signatureAlgorithm: rawTx.pqAlgorithm,
-        signatureValidLocally: local.signatureValid,
-        pqPublicKeyBytes: local.pqPublicKeyBytes,
-        pqSignatureBytes: local.pqSignatureBytes,
-        senderDerivation: "last20Bytes(keccak256(pqPublicKey))"
-      },
-      gatewayVerification: {
-        accepted: gateway.accepted,
-        signatureValid: gateway.signatureValid,
-        pqNonceValid: gateway.pqNonceValid,
-        derivedSender: gateway.derivedSender,
-        txDigest: gateway.txDigest
-      },
-      besuRelay: {
-        relayedBy: "trusted gateway relayer",
-        besuTxHash: relay.txHash,
-        receiptStatus: relay.receiptStatus,
-        blockNumber: relay.blockNumber,
-        counterAfter: relay.counterAfter
-      },
-      blockEvidence: txDump?.result?.receipt
-        ? {
-            blockHash: txDump.result.receipt.blockHash,
-            gasUsed: txDump.result.receipt.gasUsed,
-            from: txDump.result.receipt.from,
-            to: txDump.result.receipt.to,
-            logs: txDump.result.receipt.logs
-          }
-        : null
-    };
-  }, [lastTx, txDump, value, health]);
+    return buildNativeTransactionDump(lastTx, {
+      backendUrl: api.backendUrl,
+      counterAfter,
+      health,
+      txDump
+    });
+  }, [counterAfter, lastTx, txDump, health]);
 
   async function refresh() {
     const [h, o] = await Promise.all([api.health(), api.overview()]);
@@ -273,59 +225,48 @@ export default function App() {
     ].slice(0, 10));
   }
 
-  async function buyTransaction() {
-    setLoading("buy");
+  async function handleNativeSubmitted(result: NativePqcTransactionResponse) {
+    setLastTx(result);
+    setTxDump(null);
+    setCounterAfter(null);
 
-    try {
-      const result = await api.sendDirectMldsa(value);
-      setLastTx(result);
-
-      const txHash = result.result.gateway.relay.txHash;
-      const dump = await api.txDump(txHash);
-      setTxDump(dump);
-
-      pushLog(
-        "ML-DSA transaction created",
-        "success",
-        `txHash ${shortHash(txHash)} mined in block ${result.result.gateway.relay.blockNumber}`
-      );
-
-      await refresh();
-    } catch (err) {
-      pushLog(
-        "ML-DSA transaction failed",
-        "error",
-        err instanceof Error ? err.message : String(err)
-      );
-    } finally {
-      setLoading(null);
+    if (result.txHash) {
+      try {
+        setTxDump(await api.txDump(result.txHash));
+      } catch (err) {
+        pushLog(
+          "Native explorer lookup failed",
+          "error",
+          err instanceof Error ? err.message : String(err)
+        );
+      }
     }
-  }
 
-  async function invalidSignature() {
-    setLoading("invalid");
-
-    try {
-      const result = await api.sendInvalidSignature();
-      pushLog("Invalid signature rejected", "success", result.stdout);
-    } catch (err) {
-      pushLog("Invalid signature test failed", "error", String(err));
-    } finally {
-      setLoading(null);
+    if (result.pqcSender) {
+      try {
+        const counter = await api.nativeCounter(
+          result.pqcSender,
+          health?.nativePqcContractAddress ?? result.nativePqcContractAddress
+        );
+        setCounterAfter(counter.counter);
+      } catch (err) {
+        pushLog(
+          "Native counter readback failed",
+          "error",
+          err instanceof Error ? err.message : String(err)
+        );
+      }
     }
-  }
 
-  async function tamperedCalldata() {
-    setLoading("tampered");
+    pushLog(
+      "Native PQC transaction submitted",
+      "success",
+      `pqNonce ${result.pqNonce} txHash ${shortHash(result.txHash)} receipt ${
+        result.receipt?.status ?? "pending"
+      } block ${result.receipt?.blockNumber ?? result.latestBlock ?? "pending"}`
+    );
 
-    try {
-      const result = await api.sendTamperedCalldata();
-      pushLog("Tampered calldata rejected", "success", result.stdout);
-    } catch (err) {
-      pushLog("Tampered calldata test failed", "error", String(err));
-    } finally {
-      setLoading(null);
-    }
+    await refresh();
   }
 
   return (
@@ -367,7 +308,7 @@ export default function App() {
                   <p className="mt-3 max-w-3xl text-slate-600">
                     Mini blockchain explorer for a private Besu QBFT network.
                     The buy button creates a raw PQC transaction signed with
-                    ML-DSA-65, sends it to the gateway, and shows the mined
+                    ML-DSA-65, submits it directly to Besu, and shows the mined
                     transaction like an explorer.
                   </p>
                 </div>
@@ -387,20 +328,15 @@ export default function App() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-4">
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
             <StatCard
               label="Besu RPC"
               value={health?.besuRpcUrl ?? "-"}
               icon={<Network className="h-5 w-5" />}
             />
             <StatCard
-              label="Gateway"
-              value={health?.gatewayUrl ?? "-"}
-              icon={<ShieldCheck className="h-5 w-5" />}
-            />
-            <StatCard
               label="Contract"
-              value={shortHash(health?.businessContractAddress, 12, 10)}
+              value={shortHash(health?.nativePqcContractAddress, 12, 10)}
               icon={<Database className="h-5 w-5" />}
             />
             <StatCard
@@ -412,68 +348,7 @@ export default function App() {
 
           <div className="mt-6 grid gap-6 xl:grid-cols-[1.05fr_1.25fr]">
             <section className="space-y-6">
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-black text-slate-950">
-                  Buy / Create PQC Transaction
-                </h2>
-                <p className="mt-2 text-sm text-slate-500">
-                  Simulates a dApp action. Backend builds ABI calldata, signs
-                  raw PQC transaction with ML-DSA-65, and submits it to gateway.
-                </p>
-
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
-                  <label>
-                    <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      pqNonce
-                    </div>
-                    <input
-                      value="auto"
-                      readOnly
-                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-500 outline-none"
-                    />
-                  </label>
-
-                  <label>
-                    <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Contract value
-                    </div>
-                    <input
-                      value={value}
-                      onChange={(e) => setValue(e.target.value)}
-                      className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-violet-400"
-                    />
-                  </label>
-                </div>
-
-                <button
-                  disabled={loading === "buy"}
-                  onClick={buyTransaction}
-                  className="mt-5 flex w-full items-center justify-center gap-3 rounded-2xl bg-black px-5 py-4 text-base font-black text-white shadow-xl shadow-slate-300 transition hover:-translate-y-0.5 disabled:opacity-60"
-                >
-                  <Coins className="h-5 w-5" />
-                  {loading === "buy"
-                    ? "Creating transaction..."
-                    : "Buy / Send ML-DSA Transaction"}
-                  <Send className="h-5 w-5" />
-                </button>
-
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <button
-                    disabled={loading === "invalid"}
-                    onClick={invalidSignature}
-                    className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700"
-                  >
-                    Test Invalid Signature
-                  </button>
-                  <button
-                    disabled={loading === "tampered"}
-                    onClick={tamperedCalldata}
-                    className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700"
-                  >
-                    Test Tampered Calldata
-                  </button>
-                </div>
-              </div>
+              <PlanBNativePqcCard onSubmitted={handleNativeSubmitted} />
 
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
@@ -499,25 +374,21 @@ export default function App() {
             <section className="space-y-6">
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-xl font-black text-slate-950">
-                  Latest PQC Transaction
+                  Latest Native PQC Transaction
                 </h2>
 
                 {!lastTx ? (
                   <div className="mt-5 rounded-3xl border border-dashed border-slate-200 p-10 text-center text-slate-400">
-                    No PQC transaction yet. Press Buy / Send ML-DSA Transaction to generate a raw PQC transaction dump.
+                    No native PQC transaction yet. Submit a transaction to generate receipt and explorer evidence.
                   </div>
                 ) : (
                   <div className="mt-5 space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <StatCard
                         label="Status"
-                        value={
-                          lastTx.result.gateway.accepted
-                            ? "Accepted"
-                            : "Rejected"
-                        }
+                        value={lastTx.ok ? "Accepted" : "Rejected"}
                         icon={
-                          lastTx.result.gateway.accepted ? (
+                          lastTx.ok ? (
                             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                           ) : (
                             <XCircle className="h-5 w-5 text-rose-600" />
@@ -526,21 +397,21 @@ export default function App() {
                       />
                       <StatCard
                         label="Receipt"
-                        value={String(lastTx.result.gateway.relay.receiptStatus)}
+                        value={lastTx.receipt?.status ?? "pending"}
                         icon={<Gauge className="h-5 w-5" />}
                       />
                     </div>
 
                     <div className="rounded-3xl bg-slate-50 p-5">
                       <div className="mb-2 text-sm font-bold text-slate-500">
-                        Relayed Besu Transaction Hash
+                        Native Besu Transaction Hash
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="min-w-0 flex-1 break-all font-mono text-sm">
                           {latestTxHash}
                         </div>
                         <button
-                          onClick={() => copy(latestTxHash)}
+                          onClick={() => copy(latestTxHash ?? undefined)}
                           className="rounded-xl border border-slate-200 bg-white p-2"
                         >
                           <Copy className="h-4 w-4" />
@@ -551,23 +422,33 @@ export default function App() {
                     <div className="grid gap-4 md:grid-cols-2">
                       <StatCard
                         label="PQC sender"
-                        value={shortHash(lastTx.result.rawPqcTransaction.sender as string, 12, 10)}
+                        value={shortHash(lastTx.pqcSender, 12, 10)}
                         icon={<Wallet className="h-5 w-5" />}
                       />
                       <StatCard
                         label="Block"
-                        value={`#${lastTx.result.gateway.relay.blockNumber}`}
+                        value={`#${hexToNumber(lastTx.receipt?.blockNumber ?? lastTx.latestBlock) ?? "-"}`}
                         icon={<Blocks className="h-5 w-5" />}
                       />
                       <StatCard
                         label="txDigest"
-                        value={shortHash(lastTx.result.localVerification.txDigest, 12, 10)}
+                        value={shortHash(lastTx.txDigest, 12, 10)}
                         icon={<Activity className="h-5 w-5" />}
                       />
                       <StatCard
                         label="Signature"
-                        value={`${lastTx.result.localVerification.pqSignatureBytes} bytes`}
+                        value={`${lastTx.localVerification?.pqSignatureBytes ?? 0} bytes`}
                         icon={<ShieldCheck className="h-5 w-5" />}
+                      />
+                      <StatCard
+                        label="pqNonce"
+                        value={lastTx.pqNonce}
+                        icon={<Gauge className="h-5 w-5" />}
+                      />
+                      <StatCard
+                        label="On-chain counter"
+                        value={counterAfter ?? parseCounterAfterFromReceipt(lastTx)}
+                        icon={<Database className="h-5 w-5" />}
                       />
                     </div>
                   </div>
@@ -576,14 +457,14 @@ export default function App() {
 
               {pqcTransactionDump && (
                 <JsonDump
-                  title="PQC Transaction Dump"
+                  title="Native PQC Transaction Dump"
                   data={pqcTransactionDump}
                 />
               )}
 
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-xl font-black text-slate-950">
-                  Latest PQC Transactions
+                  Latest Native PQC Transactions
                 </h2>
                 <div className="mt-4 space-y-3">
                   {logs.length === 0 ? (

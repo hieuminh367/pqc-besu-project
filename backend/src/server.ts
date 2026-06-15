@@ -1,58 +1,81 @@
+process.on("unhandledRejection", (err) => {
+  console.error("[unhandledRejection]", err);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("[uncaughtException]", err);
+});
+
 import express from "express";
 import cors from "cors";
-import { execFile } from "node:child_process";
-import path from "node:path";
-import { promisify } from "node:util";
 import { config } from "./config.js";
-import { sendValidMldsaDirect } from "./direct-pqc.js";
+import { JsonRpcProvider } from "ethers";
 import { getExplorerOverview, getTxDump } from "./explorer.js";
-
-const execFileAsync = promisify(execFile);
+import { readNativePqcCounter } from "./contracts/native-pqc-contract.js";
+import { sendNativePqcTransaction } from "./native-pqc-service.js";
 
 const app = express();
-app.use(cors());
-app.use(express.json());
-
-async function runScript(scriptName: string, env: NodeJS.ProcessEnv = {}) {
-  const scriptPath = path.join(config.appRoot, "scripts", scriptName);
-  const gatewaySubmitUrl = `${config.gatewayUrl}/submit-pqc-tx`;
+async function besuRpc(method: string, params: unknown[] = []) {
+  const rpcUrl = process.env.BESU_RPC_URL ?? "http://127.0.0.1:8545";
 
   try {
-    const { stdout, stderr } = await execFileAsync(scriptPath, {
-      cwd: config.appRoot,
-      env: {
-        ...process.env,
-        GATEWAY_URL: gatewaySubmitUrl,
-        ...env
+    const res = await fetch(rpcUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      timeout: 120_000,
-      maxBuffer: 1024 * 1024 * 10
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method,
+        params,
+        id: 1,
+      }),
     });
 
+    return await res.json();
+  } catch (err) {
     return {
-      ok: true,
-      stdout,
-      stderr
-    };
-  } catch (err: any) {
-    return {
-      ok: false,
-      stdout: err.stdout ?? "",
-      stderr: err.stderr ?? "",
-      error: err.message ?? String(err)
+      jsonrpc: "2.0",
+      id: 1,
+      error: {
+        code: -32000,
+        message: err instanceof Error ? err.message : String(err),
+      },
     };
   }
 }
+
+async function waitForReceipt(txHash: string, tries = 20, delayMs = 1000) {
+  for (let i = 0; i < tries; i++) {
+    const receiptResp = await besuRpc("eth_getTransactionReceipt", [txHash]);
+
+    if (receiptResp?.error) {
+      return null;
+    }
+
+    if (receiptResp?.result) {
+      return receiptResp.result;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  return null;
+}
+
+
+app.use(cors());
+app.use(express.json());
 
 app.get("/health", (_req, res) => {
   res.json({
     ok: true,
     service: "pqc-besu-backend",
     envPath: config.envPath,
-    gatewayUrl: config.gatewayUrl,
     besuRpcUrl: config.besuRpcUrl,
     chainId: config.chainId,
-    businessContractAddress: config.businessContractAddress
+    businessContractAddress: config.businessContractAddress,
+    nativePqcContractAddress: config.nativePqcContractAddress
   });
 });
 
@@ -89,53 +112,126 @@ app.get("/explorer/tx/:hash", async (req, res) => {
   }
 });
 
-app.post("/direct/send-valid-mldsa", async (req, res) => {
+
+
+app.post("/plan-b/native-buy", async (req, res) => {
   try {
-    const result = await sendValidMldsaDirect({
-      pqNonce: req.body?.pqNonce ?? "auto",
-      value: req.body?.value ?? "7"
+    const nativePqcContractAddress =
+      req.body?.nativePqcContractAddress ??
+      process.env.NATIVE_PQC_CONTRACT_ADDRESS ??
+      process.env.BUSINESS_CONTRACT_ADDRESS;
+
+    if (!nativePqcContractAddress) {
+    return res.status(400).json({
+        ok: false,
+        mode: "plan-b-native",
+        error:
+          "NATIVE_PQC_CONTRACT_ADDRESS is missing. Pass nativePqcContractAddress in body or set it in .env.",
+      });
+    }
+
+    const pqNonce =
+      req.body?.pqNonce === undefined || String(req.body?.pqNonce).trim() === ""
+        ? "auto"
+        : String(req.body?.pqNonce);
+    const contractValue = String(req.body?.value ?? "7");
+    const result = await sendNativePqcTransaction({
+      nativePqcContractAddress,
+      pqNonce,
+      contractValue,
+      gasPrice: String(req.body?.gasPrice ?? "1000"),
+      debug: req.body?.debug === true
     });
 
-    res.json({
-      ok: true,
-      mode: "backend-direct",
-      description:
-        "Backend built ABI calldata, canonical raw PQC transaction, signed with ML-DSA-65, and submitted to PQC Gateway.",
-      result
+    const shouldWaitReceipt = req.body?.waitReceipt === true;
+    const receipt =
+      result.txHash && shouldWaitReceipt ? await waitForReceipt(result.txHash, 5, 500) : null;
+    const latestBlock = await besuRpc("eth_blockNumber", []);
+
+    return res.status(result.ok ? 200 : 500).json({
+      ok: result.ok,
+      mode: "plan-b-native",
+      nonceMode: result.nonceMode,
+      abiFunction: "executeNativePQC(uint256)",
+      rpcMethod: "eth_sendRawTransaction",
+      nativeTransactionType: "0x05",
+      nativePqcContractAddress,
+      pqNonce: result.pqNonce,
+      accountNonce: result.accountNonce,
+      pendingAccountNonce: result.pendingAccountNonce,
+      contractValue,
+      txHash: result.txHash,
+      pqcSender: result.pqcSender,
+      txDigest: result.txDigest,
+      localVerification: result.localVerification,
+      rawPqcTransaction: result.rawPqcTransaction,
+      rawNativePqcTransaction: result.rawNativePqcTransaction,
+      pqcDump: {
+        nativeTransactionType: result.pqcDump.nativeTransactionType,
+        algorithm: result.pqcDump.algorithm,
+        abiFunction: "executeNativePQC(uint256)",
+        pqcSender: result.pqcSender,
+        txDigest: result.txDigest,
+        chainId: result.pqcDump.chainId,
+        accountNonce: result.pqcDump.accountNonce,
+        to: result.pqcDump.to,
+        gasPrice: result.pqcDump.gasPrice,
+        gasLimit: result.pqcDump.gasLimit,
+        contractCall: result.pqcDump.contractCall,
+        abiCalldata: result.pqcDump.abiCalldata,
+        contractValue,
+        canonicalTxBytes: result.pqcDump.canonicalTxBytes,
+        rawNativePqcTransaction: result.rawNativePqcTransaction,
+        rawNativePqcTransactionBytes: result.pqcDump.rawNativePqcTransactionBytes,
+        pqPublicKeyBytes: result.pqcDump.pqPublicKeyBytes,
+        pqSignatureBytes: result.pqcDump.pqSignatureBytes,
+        pqPublicKey: result.pqcDump.pqPublicKey,
+        pqSignature: result.pqcDump.pqSignature,
+        fundingTxHash: result.pqcDump.fundingTxHash,
+        receiptStatus: receipt?.status ?? null,
+        receiptType: receipt?.type ?? null,
+        blockNumber: receipt?.blockNumber ?? null,
+        transactionHash: result.txHash,
+      },
+      receipt,
+      latestBlock: latestBlock?.result ?? null,
+      stdout: "",
+      stderr: result.ok ? "" : result.error ?? result.rpcResponseBody,
+      error: result.error,
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       ok: false,
-      mode: "backend-direct",
+      mode: "plan-b-native",
       error: err instanceof Error ? err.message : String(err)
     });
   }
 });
 
-app.post("/demo/check-besu", async (_req, res) => {
-  const result = await runScript("check-besu-rpc.sh");
-  res.status(result.ok ? 200 : 500).json(result);
+app.get("/plan-b/native-counter/:sender", async (req, res) => {
+  try {
+    const sender = req.params.sender;
+    const contractAddress =
+      String(req.query.contractAddress ?? "") ||
+      config.nativePqcContractAddress;
+
+    const provider = new JsonRpcProvider(config.besuRpcUrl);
+    const counter = await readNativePqcCounter(provider, contractAddress, sender);
+
+    return res.json({
+      ok: true,
+      contractAddress,
+      sender,
+      counter: counter.toString()
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: err instanceof Error ? err.message : String(err)
+    });
+  }
 });
 
-app.post("/demo/send-valid-mldsa", async (req, res) => {
-  const pqNonce = String(req.body?.pqNonce ?? "1");
-
-  const result = await runScript("send-valid-mldsa-tx.sh", {
-    PQ_NONCE: pqNonce
-  });
-
-  res.status(result.ok ? 200 : 500).json(result);
-});
-
-app.post("/demo/send-invalid-signature", async (_req, res) => {
-  const result = await runScript("send-invalid-signature.sh");
-  res.status(result.ok ? 200 : 500).json(result);
-});
-
-app.post("/demo/send-tampered-calldata", async (_req, res) => {
-  const result = await runScript("send-tampered-calldata.sh");
-  res.status(result.ok ? 200 : 500).json(result);
-});
 
 app.listen(config.backendPort, () => {
   console.log(`Backend listening on http://127.0.0.1:${config.backendPort}`);

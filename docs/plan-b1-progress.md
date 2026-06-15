@@ -2,7 +2,7 @@
 
 ## 1. Goal
 
-Plan B1 moves PQC verification from the external PQC Gateway toward the Besu process.
+Plan B1 transitions PQC verification from the legacy relayer/gateway PoC toward Besu-side entry processing.
 
 The target RPC method is:
 

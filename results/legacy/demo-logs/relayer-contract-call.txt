@@ -1,4 +1,4 @@
-Plan A baseline contract execution test
+Relayer baseline contract execution test
 
 Network RPC: http://127.0.0.1:8545
 Chain ID: 1337

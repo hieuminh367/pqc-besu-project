@@ -2,7 +2,7 @@
 
 ## 1. Goal
 
-Plan B2 moves beyond the external PQC Gateway and beyond the custom B1 RPC verifier.
+Plan B2 continues from Plan B1 and moves validation into Besu native typed-transaction processing.
 
 The goal is to introduce a native PQC transaction path into the Besu fork.
 
@@ -158,10 +158,8 @@ typed transactions, and rejects invalid native PQC typed signatures.
 Not completed yet:
 
 ```text
-[ ] Full P2P propagation verification for native PQC typed transactions.
-[ ] Full block inclusion verification for native PQC typed transactions.
-[ ] Block import validation evidence across multiple Besu nodes.
-[ ] EVM msg.sender contract-state evidence for native PQC sender.
+[ ] Production-grade transaction pool policy for PQC transactions.
+[ ] Full long-running P2P stress test.
 [ ] PQC-QBFT consensus signatures.
 ```
 
@@ -170,12 +168,11 @@ Not completed yet:
 Next target:
 
 ```text
-B2.3 - Native PQC transaction block inclusion and receipt evidence.
+B3 - PQC-QBFT consensus signatures.
 ```
 
-This should prove that a valid TransactionType.PQC transaction can be included
-in a QBFT block and that invalid PQC typed transactions are rejected by importing
-nodes.
+Before B3, the remaining optional hardening work is native txpool policy and
+long-running P2P stress evidence for the B2 demo path.
 
 ---
 
@@ -238,3 +235,17 @@ Remaining future work:
 [ ] Production-grade transaction pool policy for PQC transactions.
 [ ] Full long-running P2P stress test.
 [ ] PQC-QBFT consensus signatures.
+
+## 10. B2.4 Native App Flow Stabilization
+
+The application-layer demo flow has been stabilized for repeated native submits.
+
+Completed:
+
+```text
+[OK] Frontend sends native Plan B requests directly (legacy gateway-shaped adapter path kept only in docs/legacy).
+[OK] Backend resolves pqNonce = auto from Besu pending account nonce for repeated native submits.
+[OK] Backend serializes native TransactionType.PQC / 0x05 from ABI-generated calldata.
+[OK] Frontend/backend test runners are available through npm test.
+[OK] Native dashboard flow is aligned with: frontend -> backend -> ABI -> native PQC tx -> Besu -> receipt.
+```

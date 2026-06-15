@@ -1,4 +1,4 @@
-Plan A Gateway Tampered Calldata Test
+Relayer Gateway Tampered Calldata Test
 
 Purpose:
 Verify that the PQC Gateway rejects a raw PQC transaction if calldata is modified after signing.

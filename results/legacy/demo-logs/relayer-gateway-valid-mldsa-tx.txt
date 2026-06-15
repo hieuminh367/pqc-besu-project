@@ -1,4 +1,4 @@
-Plan A Gateway Valid ML-DSA Transaction Test
+Relayer Gateway Valid ML-DSA Transaction Test
 
 Purpose:
 Verify that the PQC Gateway accepts a valid raw PQC transaction signed with real ML-DSA-65.

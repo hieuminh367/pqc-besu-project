@@ -78,10 +78,10 @@ export async function getTxDump(txHash: string) {
       version: 1,
       vin: [
         {
-          txid: "pqc-gateway-relay",
+          txid: "native-pqc-transaction",
           vout: tx.nonce,
           scriptSig: {
-            asm: "ML-DSA-65 verified by PQC Gateway",
+            asm: "ML-DSA-65 native PQC transaction",
             hex: ""
           },
           sequence: tx.nonce,
@@ -94,7 +94,7 @@ export async function getTxDump(txHash: string) {
           value: tx.value.toString(),
           scriptPubKey: {
             address: tx.to,
-            asm: "BusinessContract.executeFromPQC",
+            asm: "NativePQCBusinessContract.executeNativePQC",
             hex: tx.data,
             type: "besu_contract_call"
           }

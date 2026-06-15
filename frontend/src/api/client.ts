@@ -1,4 +1,4 @@
-import type { BackendHealth, ScriptResponse } from "../types";
+import type { BackendHealth } from "../types";
 
 const BACKEND_URL = "/api";
 
@@ -42,38 +42,125 @@ export type ExplorerOverview = {
   };
 };
 
-export type DirectMldsaResponse = {
+export type NativeCounterResponse = {
+  ok: boolean;
+  contractAddress: string;
+  sender: string;
+  counter: string;
+};
+
+export type NativePqcLocalVerification = {
+  txDigest: string;
+  signatureValid: boolean;
+  pqPublicKeyBytes: number;
+  pqSignatureBytes: number;
+};
+
+export type NativePqcRawTransaction = {
+  type: string;
+  chainId: string;
+  pqNonce: string;
+  to: string;
+  value: string;
+  gasLimit: string;
+  gasPrice: string;
+  data: string;
+  pqAlgorithm: string;
+  pqPublicKey: string;
+  pqSignature: string;
+  sender: string;
+};
+
+export type NativePqcReceipt = {
+  status?: string;
+  blockNumber?: string;
+  transactionHash?: string;
+  from?: string;
+  to?: string;
+  type?: string;
+  logs?: Array<{ data?: string; topics?: string[] }>;
+};
+
+export type NativePqcDump = {
+  nativeTransactionType?: string;
+  algorithm?: string;
+  abiFunction?: string;
+  pqcSender?: string | null;
+  txDigest?: string | null;
+  chainId?: string;
+  accountNonce?: string | null;
+  to?: string | null;
+  gasPrice?: string | null;
+  gasLimit?: string | null;
+  abiCalldata?: string | null;
+  contractCall?: string | null;
+  contractValue?: string | null;
+  rawNativePqcTransaction?: string | null;
+  rawNativePqcTransactionBytes?: string | null;
+  pqPublicKeyBytes?: string | null;
+  pqSignatureBytes?: string | null;
+  pqPublicKey?: string | null;
+  pqSignature?: string | null;
+  fundingTxHash?: string | null;
+  receiptStatus?: string | null;
+  receiptType?: string | null;
+  blockNumber?: string | null;
+  transactionHash?: string | null;
+  canonicalTxBytes?: string | null;
+};
+
+export type NativePqcTransactionResponse = {
   ok: boolean;
   mode: string;
-  description: string;
-  result: {
-    wallet?: {
-      sender: string;
-      nonceMode: string;
-      nextAutoNonce: string;
-    };
-    rawPqcTransaction: Record<string, unknown>;
-    localVerification: {
-      txDigest: string;
-      signatureValid: boolean;
-      pqPublicKeyBytes: number;
-      pqSignatureBytes: number;
-    };
-    gateway: {
-      accepted: boolean;
-      signatureValid: boolean;
-      pqNonceValid: boolean;
-      derivedSender: string;
-      txDigest: string;
-      relay: {
-        txHash: string;
-        receiptStatus: number;
-        blockNumber: number;
-        counterAfter: string;
-      };
-    };
-  };
+  nonceMode?: "auto" | "manual";
+  abiFunction: string;
+  rpcMethod: string;
+  nativeTransactionType: string;
+  nativePqcContractAddress: string;
+  pqNonce: string;
+  accountNonce?: string;
+  pendingAccountNonce?: string;
+  contractValue: string;
+  txHash: string | null;
+  pqcSender: string | null;
+  txDigest: string | null;
+  localVerification?: NativePqcLocalVerification;
+  receipt: NativePqcReceipt | null;
+  latestBlock: string | null;
+  rawPqcTransaction?: NativePqcRawTransaction | null;
+  rawNativePqcTransaction?: string | null;
+  pqcDump?: NativePqcDump;
+  stdout: string;
+  stderr: string;
+  error?: string;
 };
+
+export type BuildNativePqcRequestBodyInput = {
+  contractAddress: string;
+  value: string;
+  pqNonce?: string;
+  gasPrice?: string;
+  waitReceipt?: boolean;
+  debug?: boolean;
+};
+
+export function buildNativePqcRequestBody({
+  contractAddress,
+  value,
+  pqNonce = "auto",
+  gasPrice = "1000",
+  waitReceipt = true,
+  debug = false
+}: BuildNativePqcRequestBodyInput) {
+  return {
+    nativePqcContractAddress: contractAddress,
+    value,
+    pqNonce,
+    gasPrice,
+    waitReceipt,
+    debug
+  };
+}
 
 export const api = {
   backendUrl: BACKEND_URL,
@@ -90,28 +177,25 @@ export const api = {
     return requestJson<any>(`/explorer/tx/${txHash}`);
   },
 
-  sendDirectMldsa(value: string): Promise<DirectMldsaResponse> {
-    return requestJson<DirectMldsaResponse>("/direct/send-valid-mldsa", {
+  nativeCounter(
+    sender: string,
+    contractAddress?: string
+  ): Promise<NativeCounterResponse> {
+    const search = contractAddress
+      ? `?contractAddress=${encodeURIComponent(contractAddress)}`
+      : "";
+    return requestJson<NativeCounterResponse>(
+      `/plan-b/native-counter/${encodeURIComponent(sender)}${search}`
+    );
+  },
+
+  sendNativePqc(
+    input: BuildNativePqcRequestBodyInput
+  ): Promise<NativePqcTransactionResponse> {
+    return requestJson<NativePqcTransactionResponse>("/plan-b/native-buy", {
       method: "POST",
-      body: JSON.stringify({ value })
+      body: JSON.stringify(buildNativePqcRequestBody(input))
     });
   },
 
-  checkBesu(): Promise<ScriptResponse> {
-    return requestJson<ScriptResponse>("/demo/check-besu", {
-      method: "POST"
-    });
-  },
-
-  sendInvalidSignature(): Promise<ScriptResponse> {
-    return requestJson<ScriptResponse>("/demo/send-invalid-signature", {
-      method: "POST"
-    });
-  },
-
-  sendTamperedCalldata(): Promise<ScriptResponse> {
-    return requestJson<ScriptResponse>("/demo/send-tampered-calldata", {
-      method: "POST"
-    });
-  }
 };

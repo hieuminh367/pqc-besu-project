@@ -1,7 +1,7 @@
-Plan A Demo Runner Test
+Relayer Demo Runner Test
 
 Purpose:
-Verify that the reusable demo scripts can run the main Plan A checks.
+Verify that the reusable demo scripts can run the main Relayer checks.
 
 Executed scripts:
 - scripts/check-besu-rpc.sh
@@ -36,4 +36,4 @@ stage: signature-verification
 reason: invalid signature
 
 Conclusion:
-The Plan A demo runner scripts successfully verified Besu RPC connectivity, valid ML-DSA-65 transaction relay, invalid signature rejection, and tampered calldata rejection.
+The Relayer demo runner scripts successfully verified Besu RPC connectivity, valid ML-DSA-65 transaction relay, invalid signature rejection, and tampered calldata rejection.
